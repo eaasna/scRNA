@@ -1,0 +1,19 @@
+/Rstudio + Team Drive
+OpenStack + Active Directory
+
+Putty HPC:
+odcf-worker01.dkfz.de
+
+Filezilla Active Directory FTP:
+e353@dkfzfs2.inet.dkfz-heidelberg.de
+
+Filezilla Team Drive FTP?
+
+My folder in Team Drive
+/icgc/dkfzlsdf/analysis/B210/Evelin
+My folder in Active directory <- OpenStack only?
+/B210-Profile/e353a
+Running scripts in HPC
+module load R/3.5.2
+Rscript test.R
+
