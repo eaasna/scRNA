@@ -1,0 +1,177 @@
+---
+title: "Gynecological data"
+author: "Evelin Aasna"
+date: "7/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#install.packages("Seurat")
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+```
+
+CellRanger output:
+matrix of cells(barcodes) and genes(features) on axes
+UMI - unique molecular identifier
+each expressed transcript fragment in each cell has separate UMI
+each UMI connected to one cell one gene
+
+```{r}
+dir_path = "/icgc/dkfzlsdf/analysis/B210/data/mf/"
+run = "cellranger201_count_23156_6_GRCh38/"
+#run = "cellranger201_count_23156_{6, 7, 8}_GRCh38/"
+#run = "cellranger201_count_24192-25608_4839STDY713158{2, 3, 4}_GRCh38/"
+```
+
+Reading old Seurat object 
+```{r}
+load(file = paste0(dir_path, run, "seurat.RData"))
+```
+
+# Quality control
+
+```{r}
+seu = UpdateSeuratObject(seudata)
+```
+
+
+```{r}
+#seu = CalculateBarcodeInflections(seu)
+#Tool(seu, slot="CalculateBarcodeInflections")
+```
+
+
+Knee plot that helps determine cut off point for low quality (empty) cells
+y <- number of cells (barcode)
+x <- number of expressed genes
+
+
+```{r}
+n_detected_genes_sorted <- sort(seu$nGene, decreasing = TRUE)
+```
+
+```{r}
+tail(n_detected_genes_sorted)
+```
+
+
+```{r}
+plot(seq.int(length(n_detected_genes_sorted)), n_detected_genes_sorted, log = "xy", type = "s", xlab = "barcodes", ylab = "detected genes")
+```
+
+
+Excluding cells that expressed < n genes
+```{r}
+n = 600
+low_exp_cells = names(seu$nFeature_RNA[seu$nFeature_RNA < n])
+seu = subset(seu, cells = low_exp_cells, invert = TRUE)
+```
+
+Excluding cells that contained > 20% mitochondrial genes
+```{r}
+high_mt_cells = names(seu$nFeature_RNA[seu$percent.mito > 0.2])
+seu = subset(seu, cells = high_mt_cells, invert = TRUE) 
+```
+
+Excluding genes that were expressed in < 3 cells
+```{r}
+count_matrix = as.matrix(seu[["RNA"]]@counts)
+count_matrix[count_matrix > 0] <- 1
+```
+
+how many cells expressed each gene?
+```{r}
+cells_per_gene = rowSums(count_matrix)
+rm(count_matrix)
+low_expression_genes = names(cells_per_gene[cells_per_gene<3]) 
+low_expression_genesS
+```
+
+
+nFeature <- number of genes per cell
+nCount <- number of transcripts per cell
+```{r}
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+```
+
+
+```{r}
+head(seu$nGene)
+```
+```{r}
+head(seu$nFeature_RNA)
+```
+
+```{r}
+head(seu$nUMI)
+```
+
+```{r}
+head(seu$nCount_RNA)
+```
+
+
+# Normalizing data
+```{r}
+seu <- NormalizeData(seu)
+```
+
+# Identifying highly variable features
+
+subset of features that exbitis high cell-to-cell variation
+```{r}
+seu <- FindVariableFeatures(seu, selection.method = "vst", nfeatures = 2000)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(seu), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(seu)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+
+plot2
+```
+#Scaling data
+```{r}
+all_genes = rownames(seu)
+seu <- ScaleData(seu, features = all_genes)
+```
+
+# Linear dimensionality reduction
+```{r}
+seu <- RunPCA(seu, features = VariableFeatures(seu))
+```
+
+```{r}
+VizDimLoadings(seu, dims = 1:2, reduction = "pca")
+```
+
+```{r}
+ElbowPlot(seu)
+```
+
+# Clustering
+
+```{r}
+seu <- FindNeighbors(seu, dims = 1:10)
+seu <- FindClusters(seu, resolution = 0.5)
+```
+
+Each cell was assigned a cluster identity
+```{r}
+head(Idents(seu), 5)
+```
+
+
+# Non-linear dimensionality reduction
+```{r}
+seu <- RunUMAP(seu, dims = 1:10)
+```
+
