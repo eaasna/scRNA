@@ -1,0 +1,32 @@
+---
+title: "SC3 clustering"
+author: "Evelin Aasna"
+date: "7/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(SingleCellExperiment)
+library(SC3)
+```
+
+```{r}
+load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/counts_cellranger201_count_23156_6_GRCh38.RData")
+sce <- SingleCellExperiment(assays = list(counts = counts, logcounts = log2(as.matrix(counts) + 1)))
+rowData(sce)$feature_symbol = rownames(counts)
+sce = sce[!duplicated(rowData(sce)$feature_symbol), ]
+```
+
+
+Clustering to find 4-6 clusters
+```{r}
+sce <- sc3(sce, ks = 5:10, biology = TRUE)
+sc3_interactive(sce)
+```
+
+
+

@@ -1,0 +1,21 @@
+---
+title: "Mapping to a reference"
+author: "Evelin Aasna"
+date: "7/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Need a labelled reference dataset.
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("scmap")
+```
+
+

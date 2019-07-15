@@ -1,0 +1,42 @@
+---
+title: "Known markers for cell-type identification"
+author: "Evelin Aasna"
+date: "7/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Converting Seurat object into count matrix
+```{r}
+load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_cellranger201_count_23156_6_GRCh38.RData")
+```
+
+
+
+
+```{r}
+epi_ref=c("KRT8", "KRT18", "EPCAM", "CLDN3")
+stro_ref = c("MME", "FN1", "COL3A1", "HOXA10")
+the_ref = c("CD34", "VWF", "CLDN5", "SOX18")
+muscl_ref = c("ACTA2", "MYH11", "MYL6", "MYL9")
+immu_ref = c("PTPRC","CD68", "CD136", "CD96")
+
+
+check_for_markers <- function(ref){
+  if (length(ref[ref %in% row.names(cluster0_markers)])!=0) print(paste(0, ref[ref %in% row.names(cluster0_markers)]))
+  if (length(ref[ref %in% row.names(cluster1_markers)])!=0) print(paste(1, ref[ref %in% row.names(cluster1_markers)]))
+  if (length(ref[ref %in% row.names(cluster2_markers)])!=0) print(paste(2, ref[ref %in% row.names(cluster2_markers)]))
+  if (length(ref[ref %in% row.names(cluster3_markers)])!=0) print(paste(3, ref[ref %in% row.names(cluster3_markers)]))
+  if (length(ref[ref %in% row.names(cluster4_markers)])!=0) print(paste(4, ref[ref %in% row.names(cluster4_markers)]))
+}  
+
+check_for_markers(epi_ref)
+check_for_markers(stro_ref)
+check_for_markers(the_ref)
+check_for_markers(muscl_ref)
+check_for_markers(immu_ref)
+```
+
