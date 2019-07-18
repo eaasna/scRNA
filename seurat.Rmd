@@ -152,19 +152,6 @@ head(Idents(seu), 5)
 
 
 # Non-linear dimensionality reduction
-TODO: conda environment umap-learn is installed. Cannot find UMAP
-```{r}
-install.packages("umap")
-library(umap-learn)
-#seu <- RunUMAP(seu, dims = 1:10)
-```
-
-```{r}
-install.packages('reticulate')
-library('reticulate')
-```
-
-
 ```{r}
 seu <- RunTSNE(seu, dims = 1:7)
 DimPlot(seu, reduction = "tsne")
@@ -175,7 +162,6 @@ TODO: timeout waiting for websocket
 ```{r}
 #sleepwalk(seu[["tsne"]]@cell.embeddings, seu[["pca"]]@cell.embeddings)
 ```
-
 
 
 ```{r}

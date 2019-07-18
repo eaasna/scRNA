@@ -15,21 +15,38 @@ library(SC3)
 ```
 
 ```{r}
-run = "cellranger201_count_23156_6_GRCh38"
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_objects/",run,".RData"))
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
 counts = as.matrix(seu[["RNA"]]@counts)
 sce <- SingleCellExperiment(assays = list(counts = counts, logcounts = log2(as.matrix(counts) + 1)))
 rowData(sce)$feature_symbol = rownames(counts)
 sce = sce[!duplicated(rowData(sce)$feature_symbol), ]
 ```
 
-sc3_interactive(sce)
+
 
 Clustering to find 4-6 clusters
 ```{r}
-sce <- sc3(sce, ks = 3:6, biology = TRUE)
-sc3_plot_consensus(sce, k = 5)
+sce <- sc3(sce, ks = 4:12, biology = TRUE)
+```
+
+Consensus clusters
+```{r}
+sc3_plot_consensus(sce, k = 6)
+```
+
+Marker genes
+```{r}
+pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/sc3_markers.pdf") 
+sc3_plot_markers(sce, k = 4, show_pdata = TRUE)
+dev.off()
 ```
 
 
+```{r}
+sc3_plot_de_genes(sce, k = 6)
+```
 
+
+```{r}
+sc3_interactive(sce)
+```
