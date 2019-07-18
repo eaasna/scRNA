@@ -15,17 +15,20 @@ library(SC3)
 ```
 
 ```{r}
-load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/counts_cellranger201_count_23156_6_GRCh38.RData")
+run = "cellranger201_count_23156_6_GRCh38"
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_objects/",run,".RData"))
+counts = as.matrix(seu[["RNA"]]@counts)
 sce <- SingleCellExperiment(assays = list(counts = counts, logcounts = log2(as.matrix(counts) + 1)))
 rowData(sce)$feature_symbol = rownames(counts)
 sce = sce[!duplicated(rowData(sce)$feature_symbol), ]
 ```
 
+sc3_interactive(sce)
 
 Clustering to find 4-6 clusters
 ```{r}
-sce <- sc3(sce, ks = 5:10, biology = TRUE)
-sc3_interactive(sce)
+sce <- sc3(sce, ks = 3:6, biology = TRUE)
+sc3_plot_consensus(sce, k = 5)
 ```
 
 

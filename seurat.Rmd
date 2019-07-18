@@ -25,36 +25,20 @@ each UMI connected to one cell one gene
 
 ```{r}
 dir_path = "/icgc/dkfzlsdf/analysis/B210/data/mf/"
-run = "cellranger201_count_23156_6_GRCh38/"
-#run = "cellranger201_count_23156_{6, 7, 8}_GRCh38/"
-#run = "cellranger201_count_24192-25608_4839STDY713158{2, 3, 4}_GRCh38/"
+runs = c("cellranger201_count_23156_6_GRCh38", "cellranger201_count_23156_7_GRCh38", "cellranger201_count_23156_8_GRCh38", "cellranger201_count_24192-25608_4839STDY7131581_GRCh38", "cellranger201_count_24192-25608_4839STDY7131582_GRCh38", "cellranger201_count_24192-25608_4839STDY7131583_GRCh38", "cellranger201_count_24192-25608_4839STDY7131584_GRCh38")
 ```
 
-Reading old Seurat object 
-```{r}
-#load(file = paste0(dir_path, run, "seurat.RData"))
-#seu = UpdateSeuratObject(seudata)
-```
 
 Reading new Seurat object
 ```{r}
-seu <- Read10X(paste0(dir_path, run, "outs/raw_gene_bc_matrices/GRCh38/"))
+seu <- Read10X(paste0(dir_path, run, "/outs/raw_gene_bc_matrices/GRCh38/"))
 seu <- CreateSeuratObject( seu, min.cells = 3, min.features=1000 )
 ```
 
 # Quality control
-
-```{r}
-#seu = CalculateBarcodeInflections(seu)
-#Tool(seu, slot="CalculateBarcodeInflections")
-```
-
-
 Knee plot that helps determine cut off point for low quality (empty) cells
 y <- number of cells (barcode)
 x <- number of expressed genes
-
-
 ```{r}
 n_detected_genes_sorted <- sort(seu$nFeature_RNA, decreasing = TRUE)
 ```
@@ -170,7 +154,14 @@ head(Idents(seu), 5)
 # Non-linear dimensionality reduction
 TODO: conda environment umap-learn is installed. Cannot find UMAP
 ```{r}
+install.packages("umap")
+library(umap-learn)
 #seu <- RunUMAP(seu, dims = 1:10)
+```
+
+```{r}
+install.packages('reticulate')
+library('reticulate')
 ```
 
 
@@ -183,33 +174,6 @@ ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/tsne_not_regressed.pdf")
 TODO: timeout waiting for websocket
 ```{r}
 #sleepwalk(seu[["tsne"]]@cell.embeddings, seu[["pca"]]@cell.embeddings)
-```
-
-# Finding cluster biomarkers i.e representative genes
-```{r}
-cluster0_markers <- FindMarkers(seu, ident.1 = 0, min.pct=0.25, only.pos = TRUE)
-cluster0_markers[1:10,]
-```
-
-Which genes (i.e features) separate cluster 1 from all other clusters? Only searching for positive markers that are expressed in > 25% of cells in cluster 1. 
-```{r}
-cluster1_markers <- FindMarkers(seu, ident.1 = 1, min.pct=0.25, only.pos = TRUE)
-cluster1_markers[1:10,]
-```
-
-```{r}
-cluster2_markers <- FindMarkers(seu, ident.1 = 2, min.pct=0.25, only.pos = TRUE)
-cluster2_markers[1:10,]
-```
-
-```{r}
-cluster3_markers <- FindMarkers(seu, ident.1 = 3, min.pct=0.25, only.pos = TRUE)
-cluster3_markers[1:10,]
-```
-
-```{r}
-cluster4_markers <- FindMarkers(seu, ident.1 = 4, min.pct=0.25, only.pos = TRUE)
-cluster4_markers[1:10,]
 ```
 
 
