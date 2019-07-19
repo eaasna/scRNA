@@ -22,11 +22,9 @@ rowData(sce)$feature_symbol = rownames(counts)
 sce = sce[!duplicated(rowData(sce)$feature_symbol), ]
 ```
 
-
-
 Clustering to find 4-6 clusters
 ```{r}
-sce <- sc3(sce, ks = 4:12, biology = TRUE)
+sce <- sc3(sce, ks = 6, biology = TRUE)
 ```
 
 Consensus clusters
@@ -37,7 +35,7 @@ sc3_plot_consensus(sce, k = 6)
 Marker genes
 ```{r}
 pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/sc3_markers.pdf") 
-sc3_plot_markers(sce, k = 4, show_pdata = TRUE)
+sc3_plot_markers(sce, k = 6, show_pdata = TRUE)
 dev.off()
 ```
 

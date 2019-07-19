@@ -13,69 +13,62 @@ knitr::opts_chunk$set(echo = TRUE)
 library(Seurat)
 ```
 
-
-Converting Seurat object into count matrix
 ```{r}
 load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_objects/joined.RData")
 ```
 
 # Finding cluster biomarkers i.e representative genes
-```{r}
-cluster0_markers <- FindMarkers(seu, ident.1 = 0, min.pct=0.25, only.pos = TRUE)
-cluster0_markers[1:10,]
-```
 
 Which genes (i.e features) separate cluster 1 from all other clusters? Only searching for positive markers that are expressed in > 25% of cells in cluster 1. 
 ```{r}
-cluster1_markers <- FindMarkers(seu, ident.1 = 1, min.pct=0.25, only.pos = TRUE)
-cluster1_markers[1:10,]
+FindMarkers(seu, ident.1 = 1, min.pct=0.25, only.pos = TRUE)[1:10,]
 ```
 
+Which genes separate cluster 0 from cluster 3?
 ```{r}
-cluster2_markers <- FindMarkers(seu, ident.1 = 2, min.pct=0.25, only.pos = TRUE)
-cluster2_markers[1:10,]
+FindMarkers(seu, ident.1 = 0, ident.2 = 3, min.pct=0.25, only.pos = TRUE)[1:10,]
 ```
 
-```{r}
-cluster3_markers <- FindMarkers(seu, ident.1 = 3, min.pct=0.25, only.pos = TRUE)
-cluster3_markers[1:10,]
-```
 
+# Known markers from cell atlas of human uterus
 High levels of gene expression
 Endometrial epithelial: KRT8, KRT18, EPCAM and CLDN3
 Endometrial stromal: MME, FN1, COL3A1, HOXA10
 Endothelial: CD34, VWF, CLDN5, SOX18
 SMA+(smooth muscle and myofibrolblasts): ACTA2, MYH11, MYL6, MYL9
 Endometrial immune: PTPRC, CD68, CD163 and CD96
+
 ```{r}
 epi_ref=c("KRT8", "KRT18", "EPCAM", "CLDN3")
 stro_ref = c("MME", "FN1", "COL3A1", "HOXA10")
 the_ref = c("CD34", "VWF", "CLDN5", "SOX18")
 muscl_ref = c("ACTA2", "MYH11", "MYL6", "MYL9")
 immu_ref = c("PTPRC","CD68", "CD136", "CD96")
-
-
-check_for_markers <- function(ref){
-  if (length(ref[ref %in% row.names(cluster0_markers)])!=0) print(paste(0, ref[ref %in% row.names(cluster0_markers)]))
-  if (length(ref[ref %in% row.names(cluster1_markers)])!=0) print(paste(1, ref[ref %in% row.names(cluster1_markers)]))
-  if (length(ref[ref %in% row.names(cluster2_markers)])!=0) print(paste(2, ref[ref %in% row.names(cluster2_markers)]))
-  if (length(ref[ref %in% row.names(cluster3_markers)])!=0) print(paste(3, ref[ref %in% row.names(cluster3_markers)]))
-}  
-
-check_for_markers(epi_ref)
-check_for_markers(stro_ref)
-check_for_markers(the_ref)
-check_for_markers(muscl_ref)
-check_for_markers(immu_ref)
 ```
 
+# Known markers from molecular and cellular cartography
 Decidual glandular epithelial: EPCAM, PAEP
 Endothelial: CD34, CD31 antigen (PECAM1)
 Heterogeneous population of fibroblasts: express matrix protein genes (e.g. PCOLCE, COL6A2) and is negative for PAEP, CD45, and CD31
 
 ```{r}
-check_for_markers(c("EPCAM", "PAEP"))
-check_for_markers(c("CD34", "CD31"))
-check_for_markers(c("PCOLCE", "COL6A2"))
+c("EPCAM", "PAEP")
+c("CD34", "CD31")
+c("PCOLCE", "COL6A2")
+```
+
+Ideas for violin plotting??
+1. visualize cluster marker genes
+2. visualize highly differentially expressed genes
+3. visualize known markers for specific cell types
+```{r}
+VlnPlot(seu, features = c("EPCAM", "PAEP"), 
+    pt.size = 0.2, ncol = 2)
+```
+
+
+Visualize on embedding 
+```{r}
+FeaturePlot(seu, reduction = "tsne", features = c("EPCAM", "PAEP"), pt.size = 0.2, ncol = 2)
 ```
 
