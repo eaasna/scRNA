@@ -41,8 +41,6 @@ Endometrial immune: PTPRC, CD68, CD163 and CD96
 ```{r}
 epi_ref=c("KRT8", "KRT18", "EPCAM", "CLDN3")
 stro_ref = c("MME", "FN1", "COL3A1", "HOXA10")
-the_ref = c("CD34", "VWF", "CLDN5", "SOX18")
-muscl_ref = c("ACTA2", "MYH11", "MYL6", "MYL9")
 immu_ref = c("PTPRC","CD68", "CD136", "CD96")
 ```
 
@@ -69,6 +67,7 @@ VlnPlot(seu, features = c("EPCAM", "PAEP"),
 
 Visualize on embedding 
 ```{r}
-FeaturePlot(seu, reduction = "tsne", features = c("EPCAM", "PAEP"), pt.size = 0.2, ncol = 2)
+FeaturePlot(seu, reduction = "umap", features = c("MME", "COL3A1"), pt.size = 0.2, ncol = 2)
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/stro_umap_2.pdf", height = 5, width = 10)
 ```
 

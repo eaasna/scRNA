@@ -24,7 +24,7 @@ sce = sce[!duplicated(rowData(sce)$feature_symbol), ]
 
 Clustering to find 4-6 clusters
 ```{r}
-sce <- sc3(sce, ks = 6, biology = TRUE)
+sce <- sc3(sce, ks = 6:16, biology = TRUE)
 ```
 
 Consensus clusters

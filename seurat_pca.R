@@ -4,9 +4,9 @@ library(ggplot2)
 load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
 
 # n is based on kneeplot
-n = 2000
+n = 500
 
-# Exclude cells that expressed < n cells
+# Exclude cells that expressed < n genes
 low_exp_cells = names(seu$nFeature_RNA[seu$nFeature_RNA < n])
 seu = subset(seu, cells = low_exp_cells, invert = TRUE)
 
