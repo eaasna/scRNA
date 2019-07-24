@@ -15,6 +15,11 @@ library(SC3)
 ```
 
 ```{r}
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sce_object.RData")
+```
+
+
+```{r}
 load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
 counts = as.matrix(seu[["RNA"]]@counts)
 sce <- SingleCellExperiment(assays = list(counts = counts, logcounts = log2(as.matrix(counts) + 1)))
@@ -24,7 +29,7 @@ sce = sce[!duplicated(rowData(sce)$feature_symbol), ]
 
 Clustering to find 4-6 clusters
 ```{r}
-sce <- sc3(sce, ks = 6:16, biology = TRUE)
+sce <- sc3(sce, ks = 6:10, biology = TRUE)
 ```
 
 Consensus clusters
@@ -32,10 +37,15 @@ Consensus clusters
 sc3_plot_consensus(sce, k = 6)
 ```
 
+```{r}
+sce <- sc3(sce, ks = 11:16, biology = TRUE)
+```
+
+
 Marker genes
 ```{r}
 pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/sc3_markers.pdf") 
-sc3_plot_markers(sce, k = 6, show_pdata = TRUE)
+sc3_plot_markers(sce, k = 9)
 dev.off()
 ```
 
@@ -48,3 +58,8 @@ sc3_plot_de_genes(sce, k = 6)
 ```{r}
 sc3_interactive(sce)
 ```
+
+```{r}
+save(sce, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sce_object.RData"))
+```
+

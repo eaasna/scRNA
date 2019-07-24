@@ -10,6 +10,10 @@ seu <- CreateSeuratObject( seu, min.cells = 3, min.features = 500)
 
 # Storing percentage of mitochondrial genes in object meta data
 seu <- PercentageFeatureSet(seu, pattern = "^MT-", col.name = "percent.mt")
+
+VlnPlot(seu, features = c("percent.mt"))
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/mito_violin.pdf", width = 8, height = 8) + NoLegend()
+
 # Excluding cells with high mito expression
 high_mt_cells = names(seu$nFeature_RNA[seu$percent.mt > 20])
 seu = subset(seu, cells = high_mt_cells, invert = TRUE)
