@@ -20,10 +20,7 @@ load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_objects/joined.RData")
 
 # Finding cluster biomarkers i.e representative genes
 
-Which genes (i.e features) separate cluster 1 from all other clusters? Only searching for positive markers that are expressed in > 25% of cells in cluster 1. 
-```{r}
-FindMarkers(seu, ident.1 = 1, min.pct=0.25, only.pos = TRUE)[1:10,]
-```
+
 
 Which genes separate cluster 0 from cluster 3?
 ```{r}

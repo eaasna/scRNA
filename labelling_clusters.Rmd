@@ -1,0 +1,87 @@
+---
+title: "Labelling cluster"
+author: "Evelin Aasna"
+date: "7/31/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/goi.RData")
+```
+
+```{r}
+all_markers = unlist(goi, use.names = F)
+variable_genes = VariableFeatures(seu)
+variable_markers = all_markers[which(all_markers %in% variable_genes)]
+celltypes = names(goi)
+```
+
+
+```{r}
+DimPlot( seu, reduction = "umap" )
+```
+
+# Cluster 14 <- endothelial
+
+Which genes (i.e features) separate cluster 14 from all other clusters? Only searching for positive markers that are expressed in > 25% of cells in cluster 14
+```{r}
+endo_markers = FindMarkers(seu, ident.1 = 14, min.pct=0.25, only.pos = TRUE)
+endo_markers
+```
+
+Known markers for endothelial cells
+```{r}
+c("PECAM1", "CD34", "VWF") %in% row.names(endo_markers)[1:10]
+```
+
+```{r}
+VlnPlot(seu, features = c("PECAM1"), ncol = 1, pt.size = 0.1)
+```
+
+```{r}
+FeaturePlot(seu, features = c("PECAM1"), reduction = "umap", ncol = 1, pt.size = 0.2)
+```
+```{r}
+VlnPlot(seu, features = c("VWF"), ncol = 1, pt.size = 0.1)
+```
+
+
+```{r}
+FeaturePlot(seu, features = c("VWF"), reduction = "umap", ncol = 1, pt.size = 0.2)
+```
+
+
+# Cluster 14 <- spongiosa
+
+Which genes (i.e features) separate cluster 14 from all other clusters? Only searching for positive markers that are expressed in > 25% of cells in cluster 14
+```{r}
+spongiosa_markers = FindMarkers(seu, ident.1 = 12, min.pct=0.25, only.pos = TRUE)
+spongiosa_markers
+```
+
+Spongiosa markers
+```{r}
+c("ACTA2", "DKK1") %in% row.names(spongiosa_markers)[1:10]
+```
+
+```{r}
+VlnPlot(seu, features = c("ACTA2"), ncol = 1, pt.size = 0.1)
+```
+
+
+```{r}
+FeaturePlot(seu, features = c("ACTA2"), reduction = "umap", ncol = 1, pt.size = 0.2)
+```
+
