@@ -1,7 +1,7 @@
 ---
-title: "Mapping to a reference"
+title: "Scmap - map to reference"
 author: "Evelin Aasna"
-date: "7/15/2019"
+date: "8/2/2019"
 output: html_document
 ---
 
@@ -9,12 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Need a labelled reference dataset.
-```{r}
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
 
-BiocManager::install("scmap")
+```{r}
+library(scmap)
+```
+
+```{r}
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.txt")
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.txt")
+```
+
+Selecting variable features for reference dataset
+```{r}
+menstrual <- selectFeatures(menstrual, suppress_plot = FALSE)
 ```
 
 

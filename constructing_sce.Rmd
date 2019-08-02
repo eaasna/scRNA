@@ -1,0 +1,77 @@
+---
+title: "Constructing SingleCellExperiment objects for scmap input"
+author: "Evelin Aasna"
+date: "7/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("scmap")
+
+install.package(GRanges)
+```
+
+```{r}
+library(SingleCellExperiment)
+library(SummarizedExperiment)
+```
+
+# Decidua reference dataset
+```{r}
+load(file="/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_5000_variably_expressed_counts.RData")
+decidua_meta = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpress_10x_meta.txt", header = TRUE)
+decidua_meta = decidua_meta[which(decidua_meta$Cell %in% colnames(decidua_counts)), ]
+```
+
+Genes in rows, cells in columns
+```{r}
+rowData = as.data.frame(row.names(decidua_counts))
+colnames(rowData) <- c("Genes")
+```
+
+```{r}
+se = SummarizedExperiment(assays = list(counts = matrix(as.numeric(unlist(decidua_counts)),nrow=nrow(decidua_counts))), rowData = rowData, colData = decidua_meta)
+rm(decidua_counts)
+```
+
+Converting to SingleCellExperiment
+```{r}
+decidua = as(se, "SingleCellExperiment")
+rm(se)
+save(decidua, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.txt")
+```
+
+# Menstrual fluid dataset
+```{r}
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+```
+
+```{r}
+rowData = as.data.frame(row.names(seu[["RNA"]]))
+colnames(rowData) <- c("Genes")
+```
+
+```{r}
+colData = as.data.frame(colnames(seu[["RNA"]]))
+colnames(colData) = c("Barcode")
+```
+
+```{r}
+se = SummarizedExperiment(assays = list(counts = as.matrix(seu[["RNA"]]@counts)), rowData = rowData, colData = colData)
+rm(seu)
+```
+
+```{r}
+menstrual = as(se, "SingleCellExperiment")
+rm(se)
+save(menstrual, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.txt")
+```
+
+

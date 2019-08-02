@@ -5,7 +5,7 @@ library(devtools)
 dir_path = "/icgc/dkfzlsdf/analysis/B210/data/mf/"
 runs = c("cellranger201_count_23156_6_GRCh38", "cellranger201_count_23156_7_GRCh38", "cellranger201_count_23156_8_GRCh38", "cellranger201_count_24192-25608_4839STDY7131581_GRCh38", "cellranger201_count_24192-25608_4839STDY7131582_GRCh38", "cellranger201_count_24192-25608_4839STDY7131583_GRCh38", "cellranger201_count_24192-25608_4839STDY7131584_GRCh38")
 
-seu <- Read10X(paste0(dir_path, runs, "/outs/raw_gene_bc_matrices/GRCh38/"))
+seu <- Read10X(paste0(dir_path, runs, "/outs/filtered_gene_bc_matrices/GRCh38/"))
 seu <- CreateSeuratObject( seu, min.cells = 3, min.features = 500)
 
 # Storing percentage of mitochondrial genes in object meta data
