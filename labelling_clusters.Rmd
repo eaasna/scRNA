@@ -17,7 +17,7 @@ library(ggplot2)
 ```
 
 ```{r}
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData")
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/goi.RData")
 ```
 

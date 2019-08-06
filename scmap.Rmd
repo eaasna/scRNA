@@ -12,16 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(scmap)
+library(SingleCellExperiment)
 ```
 
 ```{r}
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
-```
-
-```{r}
-names(assays(decidua)) <- "logcounts"
-names(assays(menstrual)) <- "logcounts"
 ```
 
 

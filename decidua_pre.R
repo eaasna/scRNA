@@ -21,7 +21,8 @@ decidua_meta = decidua_meta[which(decidua_meta$Cell %in% colnames(counts)), ]
 
 # choose nr of most variable expressed genes
 expression_var = apply(counts, 1, var)
-nr = as.numeric(args[1])
+#nr = as.numeric(args[1])
+nr = 5000
 variably_expressed = names(tail(sort(expression_var), nr))
 decidua_counts = counts[variably_expressed, ]
 rm(counts)
