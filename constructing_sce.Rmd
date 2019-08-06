@@ -10,15 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("scmap")
-
-install.package(GRanges)
-```
-
-```{r}
 library(SingleCellExperiment)
 library(SummarizedExperiment)
 ```
@@ -32,12 +23,14 @@ decidua_meta = decidua_meta[which(decidua_meta$Cell %in% colnames(decidua_counts
 
 Genes in rows, cells in columns
 ```{r}
-rowData = as.data.frame(row.names(decidua_counts))
-colnames(rowData) <- c("Genes")
+library(tidyverse)
+feature_symbol = str_split_fixed(row.names(decidua_counts), "_", 2)[,1]
+rowData = data.frame(feature_symbol = feature_symbol, gene_id = str_split_fixed(row.names(decidua_counts), "_", 2)[,2])
+row.names(decidua_counts) = feature_symbol
 ```
 
 ```{r}
-se = SummarizedExperiment(assays = list(counts = matrix(as.numeric(unlist(decidua_counts)),nrow=nrow(decidua_counts))), rowData = rowData, colData = decidua_meta)
+se = SummarizedExperiment(assays = list(logcounts = matrix(as.numeric(unlist(decidua_counts)),nrow=nrow(decidua_counts))), rowData = rowData, colData = decidua_meta)
 rm(decidua_counts)
 ```
 
@@ -45,17 +38,18 @@ Converting to SingleCellExperiment
 ```{r}
 decidua = as(se, "SingleCellExperiment")
 rm(se)
-save(decidua, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.txt")
+save(decidua, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
 ```
 
 # Menstrual fluid dataset
 ```{r}
+library(Seurat)
 load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
 ```
 
 ```{r}
 rowData = as.data.frame(row.names(seu[["RNA"]]))
-colnames(rowData) <- c("Genes")
+colnames(rowData) <- c("feature_symbol")
 ```
 
 ```{r}
@@ -64,14 +58,15 @@ colnames(colData) = c("Barcode")
 ```
 
 ```{r}
-se = SummarizedExperiment(assays = list(counts = as.matrix(seu[["RNA"]]@counts)), rowData = rowData, colData = colData)
+seu_matrix = as.matrix(seu[["RNA"]]@counts)
+se = SummarizedExperiment(assays = list(logcounts = matrix(as.numeric(unlist(seu_matrix)),nrow=nrow(seu_matrix))), rowData = rowData, colData = colData)
 rm(seu)
 ```
 
 ```{r}
 menstrual = as(se, "SingleCellExperiment")
 rm(se)
-save(menstrual, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.txt")
+save(menstrual, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
 ```
 
 

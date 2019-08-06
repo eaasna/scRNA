@@ -15,13 +15,87 @@ library(scmap)
 ```
 
 ```{r}
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.txt")
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.txt")
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
 ```
 
-Selecting variable features for reference dataset
 ```{r}
-menstrual <- selectFeatures(menstrual, suppress_plot = FALSE)
+names(assays(decidua)) <- "logcounts"
+names(assays(menstrual)) <- "logcounts"
+```
+
+
+# Reference pre analysis
+Selecting variable features from reference dataset
+```{r}
+decidua <- selectFeatures(decidua, suppress_plot = FALSE, 2000)
+```
+
+Finding median gene expression for each cluster
+```{r}
+decidua <- indexCluster(decidua, cluster_col = "annotation")
+```
+
+
+```{r}
+library(pheatmap)
+pheatmap(metadata(decidua)$scmap_cluster_index, show_rownames = FALSE)
+```
+
+Selected variably expressed genes do not seem to be very variable. 
+
+```{r}
+max(metadata(decidua)$scmap_cluster_index)
+```
+
+# Projecting to reference
+```{r message=FALSE, warning=FALSE}
+scmapCluster_results <- scmapCluster(
+  projection = menstrual, 
+  index_list = list(
+    decidua = metadata(decidua)$scmap_cluster_index
+  )
+)
+```
+
+```{r}
+unique(scmapCluster_results[[1]])
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+as.data.frame(scmapCluster_results)
+```
+
+
+```{r}
+df = as.data.frame(table(as.data.frame(scmapCluster_results)$decidua))
+ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45))
+```
+
+```{r}
+df[which(df$Var1=="Epi2"), ]
+```
+
+
+
+
+```{r}
+plot(
+  getSankey(
+    colData(menstrual)$cell_type1, 
+    scmapCluster_results$scmap_cluster_labs[,"xin"],
+    plot_height = 400
+  )
+)
+```
+
+
+```{r}
+colData(menstrual)
 ```
 
 
