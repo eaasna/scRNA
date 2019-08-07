@@ -2,15 +2,15 @@ library(Seurat)
 library(ggplot2)
 library(plyr)
 
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+type = "cca_"
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"joined.RData"))
 
 # based on elbowplot
-nPCA = 16
-
+nPCA = 10
 seu <- FindNeighbors(seu, dims = 1:nPCA)
 
 
-if (TRUE){
+if (FALSE){
   metadata = read.table("/icgc/dkfzlsdf/analysis/B210/data/mf/metadata.tsv", header = TRUE)
   
   # adding sample identity
@@ -28,6 +28,11 @@ if (TRUE){
 }
 
 
+if (TRUE) {
+  seu$orig.ident = seu@meta.data[, "sample"]
+}
+
+
 seu <- FindClusters(seu, resolution = 1)
 
 #Look at these methods later:
@@ -38,35 +43,35 @@ seu <- RunUMAP(seu, dims = 1:nPCA)
 DimPlot( seu, reduction = "umap" ) + 
   labs(title = "UMAP grouped by clustering results") +
   theme(plot.title = element_text(size = titlesize))
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/umap_joined.pdf")
+ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"umap.pdf"))
 
 seu <- RunTSNE(seu, dims = 1:nPCA)
 DimPlot(seu, reduction = "tsne") + 
   labs(title = "tSNE grouped by clustering results") +
   theme(plot.title = element_text(size = titlesize))
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/tsne_joined.pdf")
+ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"tsne.pdf"))
 
 
 reds = c("tsne", "umap")
 labels = c("tSNE", "UMAP")
 for (i in range(1,2)){
 #if (FALSE){
-  DimPlot(seu, reduction = reds[i], group.by="orig.sample") + 
-    labs(title = paste(labels[i],"grouped by batch")) +
-    theme(plot.title = element_text(size = titlesize))
-  ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",reds[i],"_by_sample.pdf"))
+  #DimPlot(seu, reduction = reds[i], group.by="orig.sample") + 
+  #  labs(title = paste(labels[i],"grouped by batch")) +
+  #  theme(plot.title = element_text(size = titlesize))
+  #ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/", type, reds[i], "_by_sample.pdf"))
   
   
   DimPlot(seu, reduction = reds[i], group.by="orig.ident") + 
     labs(title = paste(labels[i],"grouped by individual")) +
     theme(plot.title = element_text(size = titlesize))
-  ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",reds[i],"_by_individual.pdf"))
+  ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/", type, reds[i], "_by_individual.pdf"))
   
   
-  DimPlot(seu, reduction = reds[i], group.by="orig.type") + 
-    labs(title = paste(labels[i],"grouped by type")) +
-    theme(plot.title = element_text(size = titlesize))
-  ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",reds[i],"_by_type.pdf"))
+  #DimPlot(seu, reduction = reds[i], group.by="orig.type") + 
+  #  labs(title = paste(labels[i],"grouped by type")) +
+  #  theme(plot.title = element_text(size = titlesize))
+  #ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/", type, reds[i],"_by_type.pdf"))
 }
 
-save(seu, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+save(seu, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"joined.RData"))

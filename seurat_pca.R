@@ -1,7 +1,10 @@
 library(Seurat)
 library(ggplot2)
 
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+
+type = "cca_"
+load(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"joined.RData"))
+seu = combined
 
 # n is based on kneeplot
 n = 500
@@ -17,6 +20,6 @@ seu <- RunPCA(seu, features = VariableFeatures(seu))
 
 #finding optimal number of principal components
 ElbowPlot(seu)
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/joined_elbowplot.pdf")
+ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"joined_elbowplot.pdf"))
 
-save(seu, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+save(seu, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"joined.RData"))

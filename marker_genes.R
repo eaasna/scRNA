@@ -10,20 +10,21 @@ variable_genes = VariableFeatures(seu)
 variable_markers = all_markers[which(all_markers %in% variable_genes)]
 celltypes = names(goi)
 
+plotted_celltypes = c()
 
 
-celltype = "dissociation_effects"
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/plotted_celltypes.pdf")
+celltype = "up_stroma_vs_gland"
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/plotted_celltypes")
 plotted_celltypes[length(plotted_celltypes)+1] = celltype
 celltypes = celltypes[which(!(celltypes %in% plotted_celltypes))]
-save(plotted_celltypes, file="/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/plotted_celltypes.pdf")
+save(plotted_celltypes, file="/icgc/dkfzlsdf/analysis/B210/Evelin/plotted_celltypes")
 markers_to_plot = goi[[celltype]][which(goi[[celltype]] %in% variable_markers)]
 #markers_to_plot = goi[[celltype]]
 print(length(markers_to_plot))
 
-col = 1
-h = 5
-w = 5
+col = 3
+h = 15
+w = 15
 VlnPlot(seu, features = markers_to_plot, ncol = col, pt.size = 0.1) + 
   labs(title = celltype) +
   theme(plot.title = element_text(size = 15))

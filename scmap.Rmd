@@ -16,7 +16,8 @@ library(SingleCellExperiment)
 ```
 
 ```{r}
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
+#load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_menstrual_sce.RData")
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
 ```
 
@@ -24,7 +25,7 @@ load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
 # Reference pre analysis
 Selecting variable features from reference dataset
 ```{r}
-decidua <- selectFeatures(decidua, suppress_plot = FALSE, 2000)
+decidua <- selectFeatures(decidua, suppress_plot = FALSE, 500)
 ```
 
 Finding median gene expression for each cluster
@@ -67,6 +68,14 @@ as.data.frame(scmapCluster_results)
 ```
 
 
+Cell types in decidual data set
+```{r}
+df = as.data.frame(table(colData(decidua)$annotation))
+ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45))
+```
+
+
+Projected cell types in menstrual data set
 ```{r}
 df = as.data.frame(table(as.data.frame(scmapCluster_results)$decidua))
 ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45))
@@ -77,21 +86,65 @@ df[which(df$Var1=="Epi2"), ]
 ```
 
 
-
-
+How well do Seurat clusters and scmap projections line up? (not well)
 ```{r}
 plot(
   getSankey(
-    colData(menstrual)$cell_type1, 
-    scmapCluster_results$scmap_cluster_labs[,"xin"],
+    colData(menstrual)$cluster, 
+    scmapCluster_results$scmap_cluster_labs,
     plot_height = 400
   )
 )
 ```
 
 
+Do Epi2 cells in menstrual and decidual datasets variably express the same genes?
+Constructing count matrices of only Epi2 cells from both datasets.
 ```{r}
-colData(menstrual)
+decidua_epi2 = logcounts(decidua)[, which(colData(decidua)$annotation=="Epi2")]
+row.names(decidua_epi2) = rowData(decidua)$feature_symbol
+menstrual_epi2 = logcounts(menstrual)[, which(scmapCluster_results$combined_labs == "Epi2")]
+row.names(menstrual_epi2) = rowData(menstrual)$feature_symbol
+```
+
+Which genes are highly expressed in both datasets?
+Just finding highly expressed genes is too simple. Need to filter out genes that are highly expressed in all cells.
+Error: current and replacement dimanames() differ
+```{r}
+row.names(logcounts(decidua)) = rowData(decidua)$feature_symbol
+de_high = names( tail( sort( rowSums( logcounts(decidua) ) ), 100) )
+
+row.names(logcounts(menstrual)) = rowData(menstrual)$feature_symbol
+me_high = names( tail( sort( rowSums( logcounts(menstrual) ) ), 100) )
+```
+
+```{r}
+de_Epi2_high = names( tail( sort( rowSums( decidua_epi2 ) ), 100 ) )
+me_Epi2_high = names( tail( sort( rowSums( menstrual_epi2 ) ), 100 ) )
+```
+
+
+
+Human cell atlas known markers for endometrial epithelial cells
+```{r}
+epi_ref=c("KRT8", "KRT18", "EPCAM", "CLDN3")
+intersect(epi_ref, me_var)
+```
+
+Which genes are variable expressed.
+Might be useful for finding epithelial cell subsets
+```{r}
+de_var = names(tail(sort(apply(decidua_epi2, 1, var)), 50))
+me_var = names(tail(sort(apply(menstrual_epi2, 1, var)), 50))
+length(intersect(de_var, me_var))
+```
+
+Adding decidua bassed projection to seurat object
+```{r}
+seufile = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_joined.RData"
+load(seufile)
+seu$decidua.projection = factor(scmapCluster_results$combined_labs)
+save(seu, file = seufile)
 ```
 
 

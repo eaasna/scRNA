@@ -30,7 +30,9 @@ celltypes = names(goi)
 
 
 ```{r}
-DimPlot( seu, reduction = "umap" )
+DimPlot(seu, reduction = "umap", group.by="decidua.projection") + 
+    labs(title = paste("UMAP grouped by cell type")) +
+    theme(plot.title = element_text(size = 15))
 ```
 
 # Cluster 14 <- endothelial
@@ -46,12 +48,15 @@ Known markers for endothelial cells
 c("PECAM1", "CD34", "VWF") %in% row.names(endo_markers)[1:10]
 ```
 
-```{r}
-VlnPlot(seu, features = c("PECAM1"), ncol = 1, pt.size = 0.1)
-```
 
 ```{r}
-FeaturePlot(seu, features = c("PECAM1"), reduction = "umap", ncol = 1, pt.size = 0.2)
+VlnPlot(seu, features = c("FUT4", "SOX9"), ncol = 2, pt.size = 0.1)
+```
+
+
+FUT4 (i.e SSEA-1) and SOX9 are markers for putative endometrial stem cells
+```{r}
+FeaturePlot(seu, features = c("FUT4", "SOX9"), reduction = "umap", ncol = 2, pt.size = 0.2)
 ```
 ```{r}
 VlnPlot(seu, features = c("VWF"), ncol = 1, pt.size = 0.1)
@@ -83,5 +88,10 @@ VlnPlot(seu, features = c("ACTA2"), ncol = 1, pt.size = 0.1)
 
 ```{r}
 FeaturePlot(seu, features = c("ACTA2"), reduction = "umap", ncol = 1, pt.size = 0.2)
+```
+
+```{r}
+seu = FindVariableFeatures(seu)
+VariableFeaturePlot(seu)
 ```
 

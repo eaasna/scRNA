@@ -16,7 +16,6 @@ for(seu in seu_list){
   seu = subset(seu, cells = high_mt_cells, invert = TRUE)
   seu <- NormalizeData(seu, normalization.method = "LogNormalize")
   all_genes = rownames(seu)
-  seu <- ScaleData(seu, features = all_genes, vars.to.regress = "percent.mt")
   seu <- FindVariableFeatures(seu, selection.method = "vst", nfeatures = 2000)
   seu_after_processing = c(seu_after_processing, seu)
 }
@@ -35,21 +34,7 @@ twenty@meta.data[,"sample"] <- "20"
 
 rm(seu_after_processing)
 
-# use CCA to combine all cells between donors
-seuA = RunCCA(object1 = seven, object2 = ten)
-seuB = RunCCA(object1 = eighteen, object2 = twenty)
-seuA = FindVariableFeatures(seuA, selection.method = "vst", nfeatures = 2000)
-seuB = FindVariableFeatures(seuB, selection.method = "vst", nfeatures = 2000)
-seu = RunCCA(object1 = seuA, object2 = seuB)
-
-# visualize results of CCA plot CC1 versus CC2 and look at a violin plot
-p1 <- DimPlot(object = seu, reduction.use = "cca", group.by = "sample", pt.size = 0.5, 
-              do.return = TRUE)
-p2 <- VlnPlot(object = seu, group.by = "sample", do.return = TRUE, features = "nFeature_RNA")
-library(cowplot)
-plot_grid(p1, p2)
-
-
-anchors <- FindIntegrationAnchors(object.list = list(seven, ten, eighteen, twenty), dims = 1:20)
+anchors <- FindIntegrationAnchors(object.list = list(seven, ten, eighteen, twenty), dims = 1:20, k.filter = 80)
 combined <- IntegrateData(anchorset = anchors, dims = 1:20)
 
+save(combined, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_joined.RData")

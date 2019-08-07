@@ -10,12 +10,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-install.packages(Seurat)
 library(Seurat)
 ```
 
 ```{r}
-load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_objects/joined.RData")
+load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_joined.RData")
 ```
 
 # Finding cluster biomarkers i.e representative genes
@@ -53,6 +52,13 @@ c("CD34", "CD31")
 c("PCOLCE", "COL6A2")
 ```
 
+# Known markers from hormone responsive organoid cultures
+Markers for putative stem cells: SSEA-1+(gene FUT4), SOX9+ 
+```{r}
+c("FUT4", "SOX9")
+```
+
+
 Ideas for violin plotting??
 1. visualize cluster marker genes
 2. visualize highly differentially expressed genes
@@ -65,8 +71,8 @@ VlnPlot(seu, features = c("EPCAM", "PAEP"),
 
 Visualize on embedding 
 ```{r}
-FeaturePlot(seu, reduction = "umap", features = c("MME", "COL3A1"), pt.size = 0.2, ncol = 2)
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/stro_umap_2.pdf", height = 5, width = 10)
+FeaturePlot(seu, reduction = "umap", features = c("PAEP"), pt.size = 0.2, ncol = 1)
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/immu_umap.pdf", height = 5, width = 5)
 ```
 
 Curated list of known markers from Angela
