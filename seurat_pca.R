@@ -20,6 +20,6 @@ seu <- RunPCA(seu, features = VariableFeatures(seu))
 
 #finding optimal number of principal components
 ElbowPlot(seu)
-ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"joined_elbowplot.pdf"))
+ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"joined_elbowplot.pdf"), width = 7, height = 5)
 
 save(seu, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"joined.RData"))

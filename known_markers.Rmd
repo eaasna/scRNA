@@ -71,8 +71,8 @@ VlnPlot(seu, features = c("EPCAM", "PAEP"),
 
 Visualize on embedding 
 ```{r}
-FeaturePlot(seu, reduction = "umap", features = c("PAEP"), pt.size = 0.2, ncol = 1)
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/immu_umap.pdf", height = 5, width = 5)
+FeaturePlot(seu, reduction = "umap", features = c("MME", "FN1", "COL3A1"), pt.size = 0.2, ncol = 4)
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/stro_umap.pdf", height = 5, width = 15)
 ```
 
 Curated list of known markers from Angela

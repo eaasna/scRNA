@@ -91,6 +91,7 @@ FeaturePlot(seu, features = c("ACTA2"), reduction = "umap", ncol = 1, pt.size = 
 ```
 
 ```{r}
+DefaultAssay(seu) <- "SCT"
 seu = FindVariableFeatures(seu)
 VariableFeaturePlot(seu)
 ```

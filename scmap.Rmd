@@ -17,7 +17,7 @@ library(SingleCellExperiment)
 
 ```{r}
 #load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_menstrual_sce.RData")
+load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sct_cca_menstrual_sce.RData")
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
 ```
 
