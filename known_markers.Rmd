@@ -9,18 +9,30 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-library(Seurat)
-```
 
 ```{r}
-load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_joined.RData")
+library(Seurat)
+load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/integrated_seu.RData")
+```
+
+
+Ideas for violin plotting??
+1. visualize cluster marker genes
+2. visualize highly differentially expressed genes
+3. visualize known markers for specific cell types
+
+# Top 10 variable features
+```{r fig.width=10, fig.height=25}
+VlnPlot(seu, features = c("PAEP", "CCL20", "CXCL8", "HSPA6", "MMP3", "SPP1", "MMP1", "MMP10", "IGFBP1", "G0S2" ), 
+    pt.size = 0.2, ncol = 2)
+```
+
+```{r fig.width=10, fig.height=25}
+FeaturePlot(seu, reduction = "umap", features = c("PAEP", "CCL20", "CXCL8", "HSPA6", "MMP3", "SPP1", "MMP1", "MMP10", "IGFBP1", "G0S2" ), 
+    pt.size = 0.2, ncol = 2)
 ```
 
 # Finding cluster biomarkers i.e representative genes
-
-
-
 Which genes separate cluster 0 from cluster 3?
 ```{r}
 FindMarkers(seu, ident.1 = 0, ident.2 = 3, min.pct=0.25, only.pos = TRUE)[1:10,]
@@ -59,20 +71,10 @@ c("FUT4", "SOX9")
 ```
 
 
-Ideas for violin plotting??
-1. visualize cluster marker genes
-2. visualize highly differentially expressed genes
-3. visualize known markers for specific cell types
-```{r}
-VlnPlot(seu, features = c("EPCAM", "PAEP"), 
-    pt.size = 0.2, ncol = 2)
-```
-
-
 Visualize on embedding 
 ```{r}
-FeaturePlot(seu, reduction = "umap", features = c("MME", "FN1", "COL3A1"), pt.size = 0.2, ncol = 4)
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/stro_umap.pdf", height = 5, width = 15)
+FeaturePlot(seu, reduction = "umap", features = goi$endothelial, pt.size = 0.2, ncol = 3)
+#ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/epi_umap_RNA.pdf", height = 10, width = 10)
 ```
 
 Curated list of known markers from Angela
@@ -139,10 +141,6 @@ epithelial_decidualisation = c("PRLR","IRF1","FOXO1"),
 
 leukocytes=c("PTPRC","HLA-B"),
 
-nk=c("NCAM1"),
-
-nk_mucosal=c("ITGAE"),
-
 tcells=c("ITGAE","CD69","CXCR4","CD8A", "CD8B", "CD4"),
 
 apoptosis=c("CASP3"),
@@ -167,21 +165,9 @@ haem=c("PTPRC","CD34","ITGAX","CD14","CD19","CD79A","HLA-DRA","HLA-DRB1"),
 
 cycling=c("MCM2","CENPF","MK167"),  # Roser
 
-roser_mf1=c("DKK1","MCAM", "PDGFRB", "REN", "RGS5"), # MCAM (CD146) and PDGFRB are pericyte markers
+all_mf=c("DKK1","MCAM", "PDGFRB", "REN", "RGS5","ACTA2"), # MCAM (CD146) and PDGFRB are pericyte markers
 
-roser_mf2=c("DKK1"),
-
-roser_mf3=c("DKK1","ACTA2"), #spongiosa
-
-roser_mf4=c(), # decidua compacta
-
-roser_mf5=c(), # decidua compacta
-
-roser_nk1 = c("ITGA1","CD9","CD39"), # endometrial resident NK cells
-
-roser_nk2 = c("ITGA1","CD9","CDHR1"),
-
-roser_nk3 = c("ITGA1","CD9","CXCR4"),
+all_nk = c("ITGA1","CD9","CD39","CDHR1","CXCR4", "NCAM1", "ITGAE"), # endometrial resident NK cells
 
 roser_pericytes = c("MCAM","PDGFRB","REN","RGS5"),
 
@@ -193,7 +179,8 @@ roser_decidual_stromal = c("DKK1"),
 
 roser_spongiosa_vs_compacta = c("ACTA2"),
 
-hla=c("HLA-A"),
+hla=c("HLA-A")
+)
 
 dissociation_effects=c('ACTG1','ANKRD1','ARID5A','ATF3','ATF4','BAG3','BHLHE40','BRD2',
 
@@ -222,7 +209,5 @@ dissociation_effects=c('ACTG1','ANKRD1','ARID5A','ATF3','ATF4','BAG3','BHLHE40',
 'TRA2A','TRA2B','TRIB1','TUBB4B','TUBB6','UBC','USP2','WAC','ZC3H12A','ZFAND5','ZFP36',
 
 'ZFP36L1','ZFP36L2','ZYX','GADD45G','HSPE1','IER5','KCNE4')
-
-)
 ```
 

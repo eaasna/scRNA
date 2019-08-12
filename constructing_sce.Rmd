@@ -43,30 +43,27 @@ save(decidua, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_
 
 # Menstrual fluid dataset
 ```{r}
-library(Seurat)
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sct_cca_joined.RData"))
-```
+#library(Seurat)
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+assay = "RNA"
 
-```{r}
-rowData = as.data.frame(row.names(seu[["integrated"]]))
+rowData = as.data.frame(row.names(seu[[assay]]))
 colnames(rowData) <- c("feature_symbol")
-```
 
-```{r}
-colData = as.data.frame(colnames(seu[["integrated"]]))
+colData = as.data.frame(colnames(seu[[assay]]))
 colnames(colData) = c("Barcode")
-```
 
-```{r}
-seu_matrix = as.matrix(seu[["integrated"]]@data)
+if (assay %in% c("integrated", "SCT")){
+  seu_matrix = as.matrix(seu[[assay]]@data)
+} else {
+  seu_matrix = as.matrix(seu[[assay]]@counts)
+}
 se = SummarizedExperiment(assays = list(logcounts = matrix(as.numeric(unlist(seu_matrix)),nrow=nrow(seu_matrix))), rowData = rowData, colData = colData)
-rm(seu)
-```
+#rm(seu)
 
-```{r}
 menstrual = as(se, "SingleCellExperiment")
 rm(se)
-save(menstrual, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sct_cca_menstrual_sce.RData")
+save(menstrual, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/menstrual_sce.RData")
 ```
 
 

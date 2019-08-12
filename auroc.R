@@ -1,7 +1,7 @@
 library(Seurat)
 library(pROC)
 
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sct_cca_joined.RData"))
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/goi.RData")
 
 load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/selPoints.RData")
@@ -20,12 +20,13 @@ selPoints_bool <-seq.int(ncol(seu[["RNA"]]@counts)) %in% selPoints
 aucs <- sapply( informative_genes, function(g)
   auc( roc( selPoints_bool, seu[["RNA"]]@counts[g,] ) ) )
 
-marker_genes = names( head( sort( aucs, decreasing = TRUE ), 40 ) )
+marker_genes = names( head( sort( aucs, decreasing = TRUE ), 7 ) )
 
 cell_annotation = ""
 gene_annotation = ""
 # print name of celltype and which marker genes overlap (if there is overlap)
-for (i in 1:length(goi)){
+if (FALSE){
+  #for (i in 1:length(goi)){
   known_markers = goi[i]
   if (length(which(marker_genes %in% known_markers)) > 0){
     cell_annotation = names(known_markers)
@@ -36,6 +37,6 @@ for (i in 1:length(goi)){
 }
 
 DimPlot(seu, reduction = "umap", group.by="lasso") + 
-  labs(title = paste0(cell_annotation, ": ", gene_annotation)) +
+  labs(title = marker_genes) +
   theme(plot.title = element_text(size = 10))
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/lasso_4.pdf")
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/lasso_1.pdf")

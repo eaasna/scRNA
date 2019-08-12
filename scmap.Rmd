@@ -25,7 +25,7 @@ load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
 # Reference pre analysis
 Selecting variable features from reference dataset
 ```{r}
-decidua <- selectFeatures(decidua, suppress_plot = FALSE, 500)
+decidua <- selectFeatures(decidua, suppress_plot = FALSE, 50)
 ```
 
 Finding median gene expression for each cluster
@@ -36,7 +36,9 @@ decidua <- indexCluster(decidua, cluster_col = "annotation")
 
 ```{r}
 library(pheatmap)
+pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/50_variable_decidua.pdf")
 pheatmap(metadata(decidua)$scmap_cluster_index, show_rownames = FALSE)
+dev.off()
 ```
 
 Selected variably expressed genes do not seem to be very variable. 
@@ -71,14 +73,16 @@ as.data.frame(scmapCluster_results)
 Cell types in decidual data set
 ```{r}
 df = as.data.frame(table(colData(decidua)$annotation))
-ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45))
+ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45)) + labs(title = "decidua reference celltypes")
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/decidua_reference_celltypes.pdf")
 ```
 
 
 Projected cell types in menstrual data set
 ```{r}
 df = as.data.frame(table(as.data.frame(scmapCluster_results)$decidua))
-ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45))
+ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45)) + labs(title = "celltypes based on all genes")
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/celltypes_all_genes.pdf")
 ```
 
 ```{r}
@@ -139,10 +143,9 @@ me_var = names(tail(sort(apply(menstrual_epi2, 1, var)), 50))
 length(intersect(de_var, me_var))
 ```
 
-Adding decidua bassed projection to seurat object
+Adding decidua based projection to seurat object
 ```{r}
-seufile = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_joined.RData"
-load(seufile)
+seufile = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"
 seu$decidua.projection = factor(scmapCluster_results$combined_labs)
 save(seu, file = seufile)
 ```
