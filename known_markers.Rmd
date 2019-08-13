@@ -21,10 +21,13 @@ Ideas for violin plotting??
 2. visualize highly differentially expressed genes
 3. visualize known markers for specific cell types
 
+
 # Top 10 variable features
+
 ```{r fig.width=10, fig.height=25}
-VlnPlot(seu, features = c("PAEP", "CCL20", "CXCL8", "HSPA6", "MMP3", "SPP1", "MMP1", "MMP10", "IGFBP1", "G0S2" ), 
-    pt.size = 0.2, ncol = 2)
+integrated_var = c("PAEP", "CCL20", "CXCL8", "HSPA6", "MMP3", "SPP1", "MMP1", "MMP10", "IGFBP1", "G0S2" )
+log_var = c("GNLY", "MMP9", "SAA2", "CXCL1", "CCL20", "IGFBP5", "SERPINB2", "S100A9", "SAA1", "MMP7")
+VlnPlot(seu, features = log_var, pt.size = 0.2, ncol = 2)
 ```
 
 ```{r fig.width=10, fig.height=25}
@@ -47,20 +50,11 @@ Endothelial: CD34, VWF, CLDN5, SOX18
 SMA+(smooth muscle and myofibrolblasts): ACTA2, MYH11, MYL6, MYL9
 Endometrial immune: PTPRC, CD68, CD163 and CD96
 
-```{r}
-epi_ref=c("KRT8", "KRT18", "EPCAM", "CLDN3")
-stro_ref = c("MME", "FN1", "COL3A1", "HOXA10")
-immu_ref = c("PTPRC","CD68", "CD136", "CD96")
-```
 
 # Known markers from molecular and cellular cartography
-Decidual glandular epithelial: EPCAM, PAEP
-Endothelial: CD34, CD31 antigen (PECAM1)
 Heterogeneous population of fibroblasts: express matrix protein genes (e.g. PCOLCE, COL6A2) and is negative for PAEP, CD45, and CD31
 
 ```{r}
-c("EPCAM", "PAEP")
-c("CD34", "CD31")
 c("PCOLCE", "COL6A2")
 ```
 
@@ -71,15 +65,9 @@ c("FUT4", "SOX9")
 ```
 
 
-Visualize on embedding 
-```{r}
-FeaturePlot(seu, reduction = "umap", features = goi$endothelial, pt.size = 0.2, ncol = 3)
-#ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/epi_umap_RNA.pdf", height = 10, width = 10)
-```
-
 Curated list of known markers from Angela
 ```{r}
-goi = list( cilia = c("TUBA1A", "CTH", "EZR","FOXJ1"),
+marker.list = list( cilia = c("TUBA1A", "CTH", "EZR","FOXJ1"),
 
 secretory = c("PAEP", "MTHFD1","ESR1"),
 
@@ -95,7 +83,7 @@ up_stroma_vs_gland=c("THY1","NT5E","IFITM1","COL8A1","COL12A1","COL13A1",
 
 "LAMA1","MMP11","MMP2","MMP12","MMP27","MMP3","TIMP2","CTGF"),
 
-endothelial=c("PECAM1","CD34","VWF"), # PECAM1 and CD34 confirmed by Roser
+all_endothelial=c("PECAM1","CD34","VWF", "CD31", "CLDN5", "SOX18"), # PECAM1 and CD34 confirmed by Roser
 
 smooth_muscle = c("MGP"),
 
@@ -179,7 +167,15 @@ roser_decidual_stromal = c("DKK1"),
 
 roser_spongiosa_vs_compacta = c("ACTA2"),
 
-hla=c("HLA-A")
+hla=c("HLA-A"),
+
+epi_ref=c("KRT8", "KRT18", "EPCAM", "CLDN3"),
+
+stro_ref = c("MME", "FN1", "COL3A1", "HOXA10"), 
+
+immu_ref = c("PTPRC","CD68", "CD136", "CD96"),
+
+decidual_glandular_epithelial = c("EPCAM", "PAEP")
 )
 
 dissociation_effects=c('ACTG1','ANKRD1','ARID5A','ATF3','ATF4','BAG3','BHLHE40','BRD2',

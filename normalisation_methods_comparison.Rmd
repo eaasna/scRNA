@@ -1,0 +1,57 @@
+---
+title: "Comparing embeddings"
+author: "Evelin Aasna"
+date: "8/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Read in all seu object in a way that does not delete the previous one
+```{r}
+return_seurat_object <- function(type){
+  load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"_seu.RData"))
+  return(seu)  
+}
+
+log = return_seurat_object("log")
+sct = return_seurat_object("SCT")
+integrated = return_seurat_object("integrated")
+```
+
+Highlight cells on UMAP embedding that express > n UMI counts of certain gene
+```{r}
+plot_ref <- function(seu, assay, celltype, marker_genes, threshold){
+  seu$celltype = 0
+  seu$celltype[which(as.matrix(seu[[assay]]@data[marker_genes, ] > threshold))]=celltype
+
+
+  DimPlot(seu, reduction = "umap", group.by="celltype") + 
+  labs(title = paste("putative", celltype,"cells")) +
+  theme(plot.title = element_text(size = 10))
+  #ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/putative epithelial.pdf")
+} 
+```
+
+# Which cells express expression level for all marker genes is > n 
+
+TODO: plot putative epithelial cells from each normalization mehtod to the same umap embedding.
+Add celltype slot by finding corresponding cell barcodes.
+```{r}
+marker_genes = c("EPCAM", "KRT18", "KRT8", "CLDN3")
+celltype = "epithelial"
+
+plot_ref(integrated, "integrated", "epithelial", marker_genes, 1)
+```
+
+
+```{r}
+plot_ref(sct, "SCT", "epithelial", marker_genes, 0)
+```
+
+```{r}
+plot_ref(log, "RNA", "epithelial", marker_genes, 0)
+```
