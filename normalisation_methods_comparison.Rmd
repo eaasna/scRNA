@@ -22,6 +22,13 @@ sct = return_seurat_object("SCT")
 integrated = return_seurat_object("integrated")
 ```
 
+Removing high mt cells from log normalized data
+```{r}
+high_mt_cells = names(log$nFeature_RNA[seu$percent.mt > 20])
+log = subset(log, cells = high_mt_cells, invert = TRUE)
+```
+
+
 Highlight cells on UMAP embedding that express > n UMI counts of certain gene
 ```{r}
 plot_ref <- function(seu, assay, celltype, marker_genes, threshold){
@@ -55,3 +62,36 @@ plot_ref(sct, "SCT", "epithelial", marker_genes, 0)
 ```{r}
 plot_ref(log, "RNA", "epithelial", marker_genes, 0)
 ```
+
+# Endothelial cells
+```{r fig.width=15, fig.height=3}
+VlnPlot(log, marker.list$all_endothelial, pt.size = 0.2, ncol = 5 )
+```
+
+
+```{r fig.width=15, fig.height=3}
+VlnPlot(sct, marker.list$all_endothelial, pt.size = 0.2, ncol = 5 )
+```
+
+Cluster 14 in log and 13 in sct are clearly endothelial cells. 
+Where are SCT cluster 13 cells on other umap embeddings?
+
+
+issue: sct barcodes in different format or might be different alltogether
+how to set seurat object barcodes
+```{r}
+colnames(integrated[["integrated"]]@scale.data) = paste(str_split_fixed(colnames(integrated[["integrated"]]), "_", 2)[,2], str_split_fixed(colnames(integrated[["integrated"]]), "_", 2)[,1], sep = "_") 
+```
+
+```{r}
+endo_barcodes = union(names(Idents(log)[which(Idents(log)==14)]), names(Idents(sct)[which(Idents(sct)==13)]))
+
+
+integrated$celltype = 0
+integrated$celltype[endo_barcodes] = "endometrial"
+
+  DimPlot(integrated, reduction = "umap", group.by="celltype") + 
+  labs(title = paste("putative endometrial cells")) +
+  theme(plot.title = element_text(size = 10))
+```
+

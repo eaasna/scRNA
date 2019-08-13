@@ -29,5 +29,4 @@ vector.counts = vector.counts[which(vector.counts!=0)]
 # i.e first non commented row shows total number of genes, barcodes, UMIs 
 mtx = data.frame(genes = c(dims[1], non.zero$row), barcodes = c(dims[2], non.zero$col), counts = c(sum(vector.counts), vector.counts))
 rm(non.zero, tense.counts)
-
-write.table(mtx, "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua/matrix.mtx", sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(mtx, "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/matrix.mtx", sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)

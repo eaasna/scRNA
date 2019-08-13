@@ -13,10 +13,12 @@ runs = c("cellranger201_count_23156_6_GRCh38",
          "cellranger201_count_24192-25608_4839STDY7131584_GRCh38")
 
 seu <- Read10X(paste0(dir_path, runs, "/outs/filtered_gene_bc_matrices/GRCh38/"))
-seu <- CreateSeuratObject( seu, min.cells = 3 )
+seu <- CreateSeuratObject( seu, min.cells = 3, min.features = 500 )
 
 # Storing percentage of mitochondrial genes in object meta data
 seu <- PercentageFeatureSet(seu, pattern = "^MT-", col.name = "percent.mt")
+high_mt_cells = names(seu$nFeature_RNA[seu$percent.mt > 20])
+seu = subset(seu, cells = high_mt_cells, invert = TRUE)
 
 #VlnPlot(seu, features = c("percent.mt"))
 #ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/mito_violin.pdf", width = 8, height = 8) + NoLegend()
@@ -49,11 +51,11 @@ n_detected_genes_sorted <- sort(seu$nFeature_RNA, decreasing = TRUE)
 #dev.off()
 
 # n is based on kneeplot
-n = 500
+#n = 500
 
 # Exclude cells that expressed < n genes
-low_exp_cells = names(seu$nFeature_RNA[seu$nFeature_RNA < n])
-seu = subset(seu, cells = low_exp_cells, invert = TRUE)
+#low_exp_cells = names(seu$nFeature_RNA[seu$nFeature_RNA < n])
+#seu = subset(seu, cells = low_exp_cells, invert = TRUE)
 
 all_genes = rownames(seu)
 seu <- ScaleData(seu, features = all_genes, vars.to.regress = "percent.mt")

@@ -1,44 +1,47 @@
 library(SingleCellExperiment)
 library(SummarizedExperiment)
-
-# decidua reference dataset
-load(file="/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_5000_variably_expressed_counts.RData")
-decidua_meta = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpress_10x_meta.txt", header = TRUE)
-decidua_meta = decidua_meta[which(decidua_meta$Cell %in% colnames(decidua_counts)), ]
-
-library(tidyverse)
-feature_symbol = str_split_fixed(row.names(decidua_counts), "_", 2)[,1]
-rowData = data.frame(feature_symbol = feature_symbol, gene_id = str_split_fixed(row.names(decidua_counts), "_", 2)[,2])
-row.names(decidua_counts) = feature_symbol
-
-se = SummarizedExperiment(assays = list(logcounts = matrix(as.numeric(unlist(decidua_counts)),nrow=nrow(decidua_counts))), rowData = rowData, colData = decidua_meta)
-rm(decidua_counts)
-
-decidua = as(se, "SingleCellExperiment")
-rm(se)
-save(decidua, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
-
-# menstrual fluid dataset
 library(Seurat)
-#load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/joined.RData"))
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_joined.RData"))
+path = "/icgc/dkfzlsdf/analysis/B210/Evelin/"
 
+origin = "decidua"
+type = "log"
+assay = "RNA"
+type = "SCT"
+assay = "SCT"
 
-rowData = as.data.frame(row.names(seu[["RNA"]]))
+load(file = paste0(path, "decidua/",type,"_seu.RData"))
+
+rowData = as.data.frame(row.names(seu[[assay]]))
 colnames(rowData) <- c("feature_symbol")
-colData = as.data.frame(colnames(seu[["RNA"]]))
+colData = as.data.frame(colnames(seu[[assay]]))
 colnames(colData) = c("Barcode")
 
-# add seurat cluster number to SingleCellExperiment
-cluster_info = as.data.frame(Idents(seu))
-cluster_info$Barcode = row.names(cluster_info)
-colData = left_join(colData, cluster_info, by = "Barcode")
-colnames(colData)[2] = "cluster"
 
-seu_matrix = as.matrix(seu[["RNA"]]@counts)
+if ( origin == "menstrual" ){
+  # add seurat cluster number to SingleCellExperiment
+  cluster_info = as.data.frame(Idents(seu))
+  cluster_info$Barcode = row.names(cluster_info)
+  colData = left_join(colData, cluster_info, by = "Barcode")
+  colnames(colData)[2] = "cluster"
+} else {
+  # add celltype to SingleCellExperiment
+  colData = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpress_10x_meta.txt", header = TRUE)
+  colData = colData[which(colData$Cell %in% colnames(seu[[assay]])), ]
+}
+
+
+seu_matrix = as.matrix(seu[[assay]]@data)
+
 se = SummarizedExperiment(assays = list(logcounts = matrix(as.numeric(unlist(seu_matrix)),nrow=nrow(seu_matrix))), rowData = rowData, colData = colData)
 rm(seu)
 
-menstrual = as(se, "SingleCellExperiment")
+if ( origin == "menstrual" ){
+  menstrual = as(se, "SingleCellExperiment")
+  save(menstrual, file = paste0(path, "sce_RData/",type,"_",origin,".RData"))
+} else {
+  decidua = as(se, "SingleCellExperiment")
+  save(decidua, file = paste0(path, "sce_RData/",type,"_",origin,".RData"))
+}
+
 rm(se)
-save(menstrual, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/cca_menstrual_sce.RData")
+
