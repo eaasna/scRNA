@@ -9,6 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(Seurat)
+library(ggplot2)
+```
+
 
 Read in all seu object in a way that does not delete the previous one
 ```{r}
@@ -20,12 +25,6 @@ return_seurat_object <- function(type){
 log = return_seurat_object("log")
 sct = return_seurat_object("SCT")
 integrated = return_seurat_object("integrated")
-```
-
-Removing high mt cells from log normalized data
-```{r}
-high_mt_cells = names(log$nFeature_RNA[seu$percent.mt > 20])
-log = subset(log, cells = high_mt_cells, invert = TRUE)
 ```
 
 
@@ -80,6 +79,7 @@ Where are SCT cluster 13 cells on other umap embeddings?
 issue: sct barcodes in different format or might be different alltogether
 how to set seurat object barcodes
 ```{r}
+library(stringr)
 colnames(integrated[["integrated"]]@scale.data) = paste(str_split_fixed(colnames(integrated[["integrated"]]), "_", 2)[,2], str_split_fixed(colnames(integrated[["integrated"]]), "_", 2)[,1], sep = "_") 
 ```
 
@@ -93,5 +93,29 @@ integrated$celltype[endo_barcodes] = "endometrial"
   DimPlot(integrated, reduction = "umap", group.by="celltype") + 
   labs(title = paste("putative endometrial cells")) +
   theme(plot.title = element_text(size = 10))
+```
+
+```{r}
+plot_variable <- function(seu, n){
+  top10 <- head(VariableFeatures(seu), n)
+  plot1 <- VariableFeaturePlot(seu)
+  #pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/most_variable_genes.pdf", height = 5, width = 5) 
+  plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE) + labs(title = "Highly variable genes") +
+    theme(plot.title = element_text(size = 18)) + NoLegend()
+  plot2
+  #dev.off()
+}
+```
+
+```{r}
+integrated <- NormalizeData(integrated, normalization.method = "LogNormalize")
+integrated <- FindVariableFeatures(integrated)
+```
+
+
+
+```{r fig.width=15, fig.height=5}
+library(cowplot)
+plot_grid(plot_variable(log, 10), plot_variable(sct, 10), plot_variable(integrated, 10), ncol = 3)
 ```
 

@@ -7,3 +7,10 @@ load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/seu_list_
 
 # how many cores on HPC?
 con <- Conos$new(seu_list, n.cores=4)
+
+
+
+
+
+cellannot <- read.table("",header=F,sep='\t')
+cellannot <- setNames(cellannot[,2], cellannot[,1])

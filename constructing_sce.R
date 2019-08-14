@@ -1,13 +1,16 @@
 library(SingleCellExperiment)
 library(SummarizedExperiment)
 library(Seurat)
+
 path = "/icgc/dkfzlsdf/analysis/B210/Evelin/"
 
-origin = "decidua"
+origin = "menstrual"
 type = "log"
 assay = "RNA"
-type = "SCT"
-assay = "SCT"
+#type = "SCT"
+#assay = "SCT"
+#type = "integrated"
+#assay = "integrated"
 
 load(file = paste0(path, "decidua/",type,"_seu.RData"))
 

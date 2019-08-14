@@ -1,4 +1,5 @@
 library(Seurat)
+library(devtools)
 
 path = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/"
 seu <- Read10X(path)
