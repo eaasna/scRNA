@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(Seurat)
 library(ggplot2)
+library(cowplot)
+source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/marker_library.R")
 ```
 
 
@@ -22,13 +24,87 @@ return_seurat_object <- function(type){
   return(seu)  
 }
 
-log = return_seurat_object("log")
-sct = return_seurat_object("SCT")
 integrated = return_seurat_object("integrated")
 ```
 
+# Which cells express expression level for all marker genes is > n 
+```{r fig.width=10, fig.height=5}
+plot_grid(DimPlot(integrated, reduction = "log.umap", group.by = "log.clusters"), DimPlot(integrated, reduction = "log.umap", group.by = "SCT.clusters"), ncol = 2)
+```
 
+```{r fig.width=10, fig.height=5}
+plot_grid(DimPlot(integrated, reduction = "log.umap", group.by = "SCT.clusters"), DimPlot(integrated, reduction = "log.umap", group.by = "integrated.clusters"), ncol = 2)
+```
+
+# Endothelial cells
+```{r fig.width=15, fig.height=3}
+DefaultAssay(integrated) <- "SCT"
+integrated <- FindNeighbors(integrated, dims = 1:20, reduction = "SCT.pca", assay = "SCT")
+integrated <- FindClusters(integrated, verbose = FALSE)
+VlnPlot(object = integrated, features = marker.list$all_endothelial , ncol = 5)
+```
+
+TODO: use grey for unassigned celltypes or try plotting only endothelial cells since there are so few of them.
+```{r fig.width=15, fig.height=5}
+integrated$celltype = 0
+integrated$celltype[which(integrated$SCT.clusters == 14 | integrated$log.clusters == 15) ]="endothelial"
+
+plot_grid(DimPlot(integrated, reduction = "log.umap", group.by = "celltype"), DimPlot(integrated, reduction = "SCT.umap", group.by = "celltype"), DimPlot(integrated, reduction = "integrated.umap", group.by = "celltype"), ncol = 3)
+```
+
+```{r}
+DimPlot(integrated, reduction = "integrated.umap", group.by = "celltype")
+```
+
+```{r fig.width=15, fig.height=3}
+DefaultAssay(integrated) <- "RNA"
+integrated <- FindNeighbors(integrated, dims = 1:20, reduction = "log.pca", assay = "RNA")
+integrated <- FindClusters(integrated, verbose = FALSE)
+VlnPlot(object = integrated, features = marker.list$all_endothelial , ncol = 5)
+```
+
+# Epithelial genes
+
+```{r fig.width=7, fig.height=7}
+VlnPlot(object = integrated, features = marker.list$epi_ref, ncol = 2, pt.size = 0.1 )
+```
+
+
+0, 2, 3, 6, 9, 12 in SCT assay
+
+```{r fig.width=15, fig.height=5}
+integrated$celltype[which(integrated$SCT.clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
+integrated$celltype[which(integrated$SCT.clusters %in% c(1, 5)) ]="stromal"
+integrated$celltype[which(integrated$SCT.clusters %in% c(11)) ]="smooth muscle"
+
+plot_grid(DimPlot(integrated, reduction = "log.umap", group.by = "celltype"), DimPlot(integrated, reduction = "SCT.umap", group.by = "celltype"), DimPlot(integrated, reduction = "integrated.umap", group.by = "celltype"), ncol = 3)
+```
+
+
+# Highly variable genes
+
+```{r fig.width=10, fig.height=25}
+DefaultAssay(integrated) <- "RNA"
+FeaturePlot(integrated, features = VariableFeatures(integrated)[1:10], reduction = "log.umap", ncol = 2)
+```
+
+```{r fig.width=10, fig.height=25}
+DefaultAssay(integrated) <- "SCT"
+FeaturePlot(integrated, features = VariableFeatures(integrated)[1:10], reduction = "log.umap", ncol = 2)
+```
+
+```{r}
+VariableFeatures(integrated)
+```
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------
 Highlight cells on UMAP embedding that express > n UMI counts of certain gene
+
+
 ```{r}
 plot_ref <- function(seu, assay, celltype, marker_genes, threshold){
   seu$celltype = 0
@@ -41,8 +117,6 @@ plot_ref <- function(seu, assay, celltype, marker_genes, threshold){
   #ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/putative epithelial.pdf")
 } 
 ```
-
-# Which cells express expression level for all marker genes is > n 
 
 TODO: plot putative epithelial cells from each normalization mehtod to the same umap embedding.
 Add celltype slot by finding corresponding cell barcodes.
@@ -62,60 +136,5 @@ plot_ref(sct, "SCT", "epithelial", marker_genes, 0)
 plot_ref(log, "RNA", "epithelial", marker_genes, 0)
 ```
 
-# Endothelial cells
-```{r fig.width=15, fig.height=3}
-VlnPlot(log, marker.list$all_endothelial, pt.size = 0.2, ncol = 5 )
-```
-
-
-```{r fig.width=15, fig.height=3}
-VlnPlot(sct, marker.list$all_endothelial, pt.size = 0.2, ncol = 5 )
-```
-
 Cluster 14 in log and 13 in sct are clearly endothelial cells. 
 Where are SCT cluster 13 cells on other umap embeddings?
-
-
-issue: sct barcodes in different format or might be different alltogether
-how to set seurat object barcodes
-```{r}
-library(stringr)
-colnames(integrated[["integrated"]]@scale.data) = paste(str_split_fixed(colnames(integrated[["integrated"]]), "_", 2)[,2], str_split_fixed(colnames(integrated[["integrated"]]), "_", 2)[,1], sep = "_") 
-```
-
-```{r}
-endo_barcodes = union(names(Idents(log)[which(Idents(log)==14)]), names(Idents(sct)[which(Idents(sct)==13)]))
-
-
-integrated$celltype = 0
-integrated$celltype[endo_barcodes] = "endometrial"
-
-  DimPlot(integrated, reduction = "umap", group.by="celltype") + 
-  labs(title = paste("putative endometrial cells")) +
-  theme(plot.title = element_text(size = 10))
-```
-
-```{r}
-plot_variable <- function(seu, n){
-  top10 <- head(VariableFeatures(seu), n)
-  plot1 <- VariableFeaturePlot(seu)
-  #pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/most_variable_genes.pdf", height = 5, width = 5) 
-  plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE) + labs(title = "Highly variable genes") +
-    theme(plot.title = element_text(size = 18)) + NoLegend()
-  plot2
-  #dev.off()
-}
-```
-
-```{r}
-integrated <- NormalizeData(integrated, normalization.method = "LogNormalize")
-integrated <- FindVariableFeatures(integrated)
-```
-
-
-
-```{r fig.width=15, fig.height=5}
-library(cowplot)
-plot_grid(plot_variable(log, 10), plot_variable(sct, 10), plot_variable(integrated, 10), ncol = 3)
-```
-

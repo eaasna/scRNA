@@ -26,7 +26,7 @@ for(i in 1:length(seu_list)){
   
   if (norm == "SCT"){
     options(future.globals.maxSize=891289600)
-    seu_list[[i]] <- SCTransform(seu_list[[i]], verbose = FALSE, conserve.memory = FALSE, vars.to.regress = "percent.mt")
+    seu_list[[i]] <- SCTransform(seu_list[[i]], verbose = FALSE, conserve.memory = FALSE, vars.to.regress = "percent.mt", new.assay.name = "SCT.single")
   } else {
     seu_list[[i]] <- NormalizeData(seu_list[[i]], normalization.method = "LogNormalize")
     all_genes <- rownames(seu_list[[i]])

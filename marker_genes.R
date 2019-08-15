@@ -1,15 +1,26 @@
 library(Seurat)
 library(dplyr)
 library(ggplot2)
+source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/marker_library.R")
 
 
-assay = "integrated"
-type = "integrated"
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",type,"_seu.RData"))
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/goi.RData")
+load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/integrated_seu.RData")
+#load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/goi.RData")
+goi = marker.list
+
+
+#preparing clustering based on assay
+assay = "SCT"
+type = "SCT"
+nPCA = 30
+
+DefaultAssay(seu) <- assay
+seu <- FindNeighbors(seu, dims = 1:nPCA, reduction = paste0(type, ".pca"), assay = assay)
+seu <- FindClusters(seu, verbose = FALSE)
+
 
 titlesize = 15
-DimPlot( seu, reduction = "umap" ) + 
+DimPlot( seu, reduction = "log.umap" ) + 
   labs(title = type) +
   theme(plot.title = element_text(size = titlesize))
 ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"_umap.pdf"), height = 5, width = 5)
@@ -22,7 +33,7 @@ variable_genes = VariableFeatures(seu)
 variable_markers = all_markers[which(all_markers %in% variable_genes)]
 celltypes = names(goi)
 
-for (celltype in setdiff(names(marker.list), names(goi))){
+for (celltype in names(marker.list)){
   #markers_to_plot = goi[[celltype]][which(marker.list[[celltype]] %in% variable_markers)]
   markers_to_plot = marker.list[[celltype]][which(marker.list[[celltype]] %in% row.names(seu[[assay]]@data))]
   # number of marker genes that have UMI counts in this assay
@@ -32,14 +43,14 @@ for (celltype in setdiff(names(marker.list), names(goi))){
     h = df[len,"h"]
     w = df[len,"w"]
     
-    if (len==1) {title = celltype} else {title = markers_to_plot[1]}
+    if (len==1) {title = markers_to_plot[1]} else {title = celltype}
     VlnPlot(seu, features = markers_to_plot, ncol = col, pt.size = 0.1) + 
-      labs(title = celltype) +
+      labs(title = title) +
       theme(plot.title = element_text(size = 15))
     ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"/vln_",celltype,"_",type,".pdf"), height = h, width = w)
     
-    FeaturePlot(seu, features = markers_to_plot, reduction = "umap", ncol = col, pt.size = 0.2) + 
-      labs(title = celltype) +
+    FeaturePlot(seu, features = markers_to_plot, reduction = "log.umap", ncol = col, pt.size = 0.2) + 
+      labs(title = title) +
       theme(plot.title = element_text(size = 15))
     ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"/umap_",celltype,"_",type,".pdf"), height = h, width = w)
   }

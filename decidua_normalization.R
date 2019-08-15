@@ -19,13 +19,12 @@ seu$annotation = metadata$annotation
 tmp = seu
 seu <- NormalizeData(seu, normalization.method = "LogNormalize")
 all_genes <- rownames(seu)
-seu <- ScaleData(seu, features = all_genes, vars.to.regress = "percent.mt")
+seu <- ScaleData(seu, features = all_genes)
 save( seu, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/log_seu.RData" )
 
 seu = tmp
 rm(tmp)
 # size limit: 2048 * 1024^2 
 options(future.globals.maxSize=891289600)
-seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE, vars.to.regress = "percent.mt")
+seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE)
 save( seu, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_seu.RData" )
-

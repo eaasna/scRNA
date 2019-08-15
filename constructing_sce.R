@@ -1,18 +1,22 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+
 library(SingleCellExperiment)
 library(SummarizedExperiment)
 library(Seurat)
+library(dplyr)
 
 path = "/icgc/dkfzlsdf/analysis/B210/Evelin/"
 
-origin = "menstrual"
-type = "log"
-assay = "RNA"
-#type = "SCT"
-#assay = "SCT"
-#type = "integrated"
-#assay = "integrated"
+origin = args[1]
+type = args[2]
+assay = args[3]
 
-load(file = paste0(path, "decidua/",type,"_seu.RData"))
+if (origin == "menstrual"){
+  load(file = paste0(path, "seurat_object/integrated_seu.RData"))
+} else {
+  load(file = paste0(path, "decidua/",type,"_seu.RData"))
+}
 
 rowData = as.data.frame(row.names(seu[[assay]]))
 colnames(rowData) <- c("feature_symbol")
@@ -45,6 +49,3 @@ if ( origin == "menstrual" ){
   decidua = as(se, "SingleCellExperiment")
   save(decidua, file = paste0(path, "sce_RData/",type,"_",origin,".RData"))
 }
-
-rm(se)
-

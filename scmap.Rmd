@@ -13,91 +13,18 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(scmap)
 library(SingleCellExperiment)
-```
-
-```{r}
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/sct_cca_menstrual_sce.RData")
-load("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/decidua_sce.RData")
-```
-
-
-# Reference pre analysis
-Selecting variable features from reference dataset
-```{r}
-decidua <- selectFeatures(decidua, suppress_plot = FALSE, 50)
-```
-
-Finding median gene expression for each cluster
-```{r}
-decidua <- indexCluster(decidua, cluster_col = "annotation")
+library(ggplot2)
 ```
 
 
 ```{r}
-library(pheatmap)
-pdf("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/50_variable_decidua.pdf")
-pheatmap(metadata(decidua)$scmap_cluster_index, show_rownames = FALSE)
-dev.off()
-```
-
-Selected variably expressed genes do not seem to be very variable. 
-
-```{r}
-max(metadata(decidua)$scmap_cluster_index)
-```
-
-# Projecting to reference
-```{r message=FALSE, warning=FALSE}
-scmapCluster_results <- scmapCluster(
-  projection = menstrual, 
-  index_list = list(
-    decidua = metadata(decidua)$scmap_cluster_index
-  )
-)
-```
-
-```{r}
+assay = "SCT"
+load(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/",assay,"_cluster_results.RData"))
 unique(scmapCluster_results[[1]])
 ```
 
 ```{r}
-library(ggplot2)
-```
-
-```{r}
 as.data.frame(scmapCluster_results)
-```
-
-
-Cell types in decidual data set
-```{r}
-df = as.data.frame(table(colData(decidua)$annotation))
-ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45)) + labs(title = "decidua reference celltypes")
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/decidua_reference_celltypes.pdf")
-```
-
-
-Projected cell types in menstrual data set
-```{r}
-df = as.data.frame(table(as.data.frame(scmapCluster_results)$decidua))
-ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + theme_bw() + theme(axis.text.x = element_text(angle = 45)) + labs(title = "celltypes based on all genes")
-ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/celltypes_all_genes.pdf")
-```
-
-```{r}
-df[which(df$Var1=="Epi2"), ]
-```
-
-
-How well do Seurat clusters and scmap projections line up? (not well)
-```{r}
-plot(
-  getSankey(
-    colData(menstrual)$cluster, 
-    scmapCluster_results$scmap_cluster_labs,
-    plot_height = 400
-  )
-)
 ```
 
 
