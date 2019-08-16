@@ -38,3 +38,12 @@ qc_plots <- function(seu, suffix){
   ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",suffix,"joined_elbowplot.pdf"), width = 7, height = 5)
   
 }
+
+
+return_assay <- function( seu, assay ){
+  DefaultAssay(seu) <- assay
+  counts = matrix( as.numeric( unlist( as.matrix( seu[[assay]]@counts ) )), nrow=dim( seu[[assay]] )[1] )
+  logcounts = matrix( as.numeric( unlist( as.matrix( seu[[assay]]@data ) )), nrow=dim( seu[[assay]] )[1] )
+  
+  return(list(counts, logcounts))
+}

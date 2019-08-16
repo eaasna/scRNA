@@ -2,7 +2,9 @@
 title: "Conos for sample 7"
 author: "Evelin Aasna"
 date: "8/16/2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,11 +12,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
+```{r include=FALSE}
 devtools::install_github("hms-dbmi/conos")
 library(conos)
 library(Seurat)
 library(ggplot2)
+library(cowplot)
+library(dplyr)
+library(SingleCellExperiment)
+library(SummarizedExperiment)
+library(scmap)
+library(pheatmap)
 source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/seurat_utils.R")
 dir_path = "/icgc/dkfzlsdf/analysis/B210/data/mf/"
 suffix = "/outs/filtered_gene_bc_matrices/GRCh38/"
@@ -22,50 +30,58 @@ suffix = "/outs/filtered_gene_bc_matrices/GRCh38/"
 
 ```{r}
 norm = "SCT"
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",norm,"_seu.RData"))
-barcodes07 = colnames(seu[["RNA"]]@counts[,which(seu$sample == "07")])
-seu = subset(seu, cells = barcodes07)
+if (norm == "log"){assay = "RNA"}
+if (norm == "SCT"){assay = "SCT"}
 ```
 
-
-
-```{r}
-seu = Read10X( paste0( dir_path, c("cellranger201_count_23156_6_GRCh38", 
+Creating fresh seurat object for only sample 7
+```{r include=FALSE}
+seu = Read10X( paste0( dir_path, c("cellranger201_count_23156_6_GRCh38",
                                       "cellranger201_count_24192-25608_4839STDY7131582_GRCh38",
-                                      "cellranger201_count_24192-25608_4839STDY7131583_GRCh38"), suffix))
-
-seu <- CreateSeuratObject( seu, min.features = 500, min.cells = 3 )
-
-seu <- PercentageFeatureSet(seu, pattern = "^MT-", col.name = "percent.mt")
-high_mt_cells = names(seu$nFeature_RNA[seu$percent.mt > 20])
-seu = subset(seu, cells = high_mt_cells, invert = TRUE)
-```
-
-
-Either log normalization or SCTransformation
-```{r message = FALSE, warning=FALSE}
+                                      "cellranger201_count_24192-25608_4839STDY7131583_GRCh38",
+                                   "cellranger201_count_23156_7_GRCh38",
+                                   "cellranger201_count_23156_8_GRCh38",
+                                   "cellranger201_count_24192-25608_4839STDY7131581_GRCh38",
+                                   "cellranger201_count_24192-25608_4839STDY7131584_GRCh38"), suffix))
+seu <- CreateSeuratObject( seu, min.features = 500, min.cells = 3)
+seu <- exclude_high_mt(seu, 20)
 
 if (norm == "log"){
-  seu <- NormalizeData(seu, normalization.method = "LogNormalize" )
-  seu <- ScaleData(seu, features = rownames(seu) )
-  seu <- FindVariableFeatures(seu, selection.method = "vst", nfeatures = 2000, assay = "RNA")
-  
-  nPCA = 20
-} 
+    seu <- NormalizeData(seu, normalization.method = "LogNormalize")
+    seu <- FindVariableFeatures(seu, selection.method = "vst", nfeatures = 2000)
+    seu <- ScaleData(seu, features = rownames(seu))  
+  }
 if (norm == "SCT"){
-  seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE )
-  nPCA = 30
+    options(future.globals.maxSize=891289600)
+    seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE )
 }
 
-seu <- RunPCA(seu, features = VariableFeatures(seu) )
-#seu <- RunUMAP(seu, dims = 1:nPCA)
-seu <- RunTSNE(seu, dims = 1:nPCA )
+```
 
+
+```{r }
+DefaultAssay(seu) <- assay
+
+if (norm == "log"){nPCA = 20}
+if (norm == "SCT"){nPCA = 30}
+seu <- RunPCA(seu, features = VariableFeatures(seu) )
+seu <- RunTSNE(seu, dims = 1:nPCA )
 seu <- FindNeighbors(seu, dims = 1:nPCA)
 seu <- FindClusters(seu, verbose = FALSE)
+```
+
+```{r}
 seu_list = c(seu)
 ```
 
+
+Created a integrated seurat object with 4 assays. Using subset of cells.
+```{r}
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/integrated_seu.RData"))
+seu_full = seu
+#barcodes07 = colnames(seu[[assay]]@data[,which(seu$sample == "07")])
+#seu = subset(seu, cells = barcodes07)
+```
 
 ```{r}
 load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu_5000.RData"))
@@ -75,12 +91,7 @@ load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu_50
 ```{r}
 seu_list[[length(seu_list)+1]] = seu
 rm(seu)
-```
-
-```{r}
-names(seu_list) = c("07", "decidua")
-
-save(seu_list, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/seu_list_",norm,"_test.RData"))
+names(seu_list) = c("menstrual", "decidua")
 ```
 
 
@@ -110,6 +121,7 @@ cellannot <- seu_list[["decidua"]]$annotation
 
 # propagating labels from reference
 new.label.probabilities <- con$propagateLabels(labels = cellannot, verbose=T, fixed.initial.labels=T)
+new.label.probabilities <- new.label.probabilities[complete.cases(new.label.probabilities),]
 ```
 
 ```{r, fig.width=5, fig.height=5}
@@ -131,12 +143,102 @@ con$plotPanel(groups = new.annot)
 ```
 
 
-TODO: project annotations onto original UMAP that contains all 7 samples
-
+Projecting conos predictions onto initial UMAP from Seurat
 ```{r}
 new.annot = new.annot[which(substr(names(new.annot), 1, 1) != "F")]
+#save(new.annot, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/",norm,"_annot"))
 
-norm = "integrated"
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/",norm,"_seu.RData"))
+conos = data.frame(barcode = colnames(seu_full[[assay]])) %>% 
+  left_join(data.frame(barcode = names(new.annot), celltype = unname(new.annot)), by = "barcode")
+
+seu_full$conos = conos$celltype
 ```
+
+```{r fig.height=7, fig.width=10}
+DimPlot(seu_full, reduction = "log.umap", group.by = "conos")
+```
+
+
+# Marker gene based cluster labels
+```{r fig.height=5, fig.width=15}
+seu_full$celltype = 0
+seu_full$celltype[which(seu_full$SCT.clusters == 14 | seu_full$log.clusters == 15) ]="endothelial"
+seu_full$celltype[which(seu_full$SCT.clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
+seu_full$celltype[which(seu_full$SCT.clusters %in% c(1, 5)) ]="stromal"
+seu_full$celltype[which(seu_full$SCT.clusters %in% c(11)) ]="smooth muscle"
+seu_full$celltype[which(seu_full$celltype==0) ]=NA
+
+plot_grid(DimPlot(seu_full, reduction = "log.umap", group.by = "celltype"), DimPlot(seu_full, reduction = "SCT.umap", group.by = "celltype"), DimPlot(seu_full, reduction = "integrated.umap", group.by = "celltype"), ncol = 3)
+```
+
+
+```{r fig.width=10, fig.height=7}
+DimPlot(seu_full, reduction = "log.umap", group.by = "celltype")
+```
+
+# Scmap
+Scmap uses SingleCellExperiment objects as input
+```{r}
+seu = seu_list[["menstrual"]]
+rowData = data.frame(feature_symbol = row.names(seu[[assay]]))
+colData = data.frame(Barcode = colnames(seu[[assay]]))
+cluster_info = data.frame(cluster = Idents(seu))
+cluster_info$Barcode = row.names(cluster_info)
+colData = left_join(colData, cluster_info, by = "Barcode")
+
+
+assays = return_assay(seu, assay)
+
+se = SummarizedExperiment(assays = list(counts = assays[[1]], logcounts = assays[[2]]), rowData = rowData, colData = colData)
+
+rm(seu)
+menstrual = as(se, "SingleCellExperiment")
+```
+
+```{r}
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/sce_RData/",norm,"_decidua.RData"))
+```
+
+Feature selection
+```{r}
+decidua <- selectFeatures(decidua, suppress_plot = FALSE, 500)
+decidua <- indexCluster(decidua, cluster_col = "annotation")
+```
+
+Variable genes
+```{r}
+#pdf(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",assay,"50_variable_decidua.pdf"))
+pheatmap(metadata(decidua)$scmap_cluster_index, show_rownames = FALSE)
+#dev.off()
+```
+
+
+```{r include=FALSE}
+scmapCluster_results <- scmapCluster(
+  projection = menstrual, 
+  index_list = list(
+    decidua = metadata(decidua)$scmap_cluster_index
+  )
+)
+```
+
+Celltypes in reference dataset
+```{r}
+df = as.data.frame(table(colData(decidua)$annotation))
+ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + 
+  theme_bw() + theme(axis.text.x = element_text(angle = 45)) + 
+  labs(title = "decidua reference celltypes")
+#ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",assay,"_reference_celltypes.pdf"))
+```
+
+```{r}
+df = as.data.frame(table(as.data.frame(scmapCluster_results)$decidua))
+ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() + 
+  theme_bw() + theme(axis.text.x = element_text(angle = 45)) + 
+  labs(title = "celltypes based on all genes")
+#ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",assay,"_celltypes_all_genes.pdf"))
+```
+
+Projecting scmap predictions onto initial UMAP from Seurat
+TODO
 
