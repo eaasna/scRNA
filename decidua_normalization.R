@@ -14,10 +14,12 @@ metadata = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpr
 metadata = metadata[which(metadata$Cell %in% colnames(seu[["RNA"]])), ]
 seu$annotation = metadata$annotation
 
+norm = "SCT"
 
-if (FALSE){
+if (norm == "log"){
   tmp = seu
   seu <- NormalizeData(seu, normalization.method = "LogNormalize" )
+  seu <- FindVariableFeatures(seu, selection.method = "vst", nfeatures = 2000, assay = "RNA")
   high_var_genes = VariableFeatures(seu)[1:5000]
   seu = subset(seu, features = high_var_genes )
   seu <- ScaleData(seu, features = rownames(seu) )
@@ -34,11 +36,13 @@ if (FALSE){
   rm(tmp)
   
 }
-# size limit: 2048 * 1024^2 
-options(future.globals.maxSize=891289600)
-seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE )
-high_var_genes = VariableFeatures(seu)[1:5000]
-seu = subset(seu, features = high_var_genes )
+if (norm == "SCT"){
+  # size limit: 2048 * 1024^2 
+  options(future.globals.maxSize=891289600)
+  seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE )
+  high_var_genes = VariableFeatures(seu)[1:5000]
+  seu = subset(seu, features = high_var_genes )
+}
 
 nPCA = 30
 seu <- RunPCA(seu, features = VariableFeatures(seu) )
@@ -47,4 +51,4 @@ seu <- RunTSNE(seu, dims = 1:nPCA )
 
 seu <- FindNeighbors(seu, dims = 1:nPCA)
 seu <- FindClusters(seu, verbose = FALSE)
-save( seu, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_seu_5000.RData" )
+save( seu, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu_5000.RData" ))

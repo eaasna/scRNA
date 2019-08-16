@@ -11,7 +11,7 @@ exclude_high_mt <- function(seu, percentage){
 # return Seurat object with UMAP embedding, neighbors, clusters
 after_dim_reduc <- function(seu, nPCA){
   seu <- RunUMAP(seu, dims = 1:nPCA)
-  #seu <- RunTSNE(seu, dims = 1:nPCA)
+  seu <- RunTSNE(seu, dims = 1:nPCA)
   
   seu <- FindNeighbors(seu, dims = 1:nPCA)
   seu <- FindClusters(seu, verbose = FALSE)
