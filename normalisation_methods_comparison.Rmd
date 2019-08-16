@@ -81,6 +81,12 @@ plot_grid(DimPlot(integrated, reduction = "log.umap", group.by = "celltype"), Di
 ```
 
 
+# Cell type assignments based on decidua reference
+```{r}
+annot = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/SCT_annotation.txt", header = FALSE)
+```
+
+
 # Highly variable genes
 
 ```{r fig.width=10, fig.height=25}

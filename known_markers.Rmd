@@ -143,6 +143,11 @@ nPCA = 30
 seu = find_clusters(seu, type, assay, nPCA)
 ```
 
+
+```{r}
+DimHeatmap(seu, dims = c(1,2), cells = 500, assays = "integrated", balanced = TRUE )
+```
+
 ```{r fig.width=5, fig.height=5}
 titlesize = 15
 DimPlot( seu, reduction = "log.umap" ) + 
