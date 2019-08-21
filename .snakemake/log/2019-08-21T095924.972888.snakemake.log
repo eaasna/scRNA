@@ -1,0 +1,6 @@
+Building DAG of jobs...
+MissingInputException in line 22 of /icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/Snakefile:
+Missing input files for rule decidua_normalization:
+/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/E-MTAB-6701_arrayexpress_10x_meta.txt
+/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/decidua/matrix.mtx
+/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/decidua/barcodes.tsv

@@ -3,12 +3,25 @@
 decidua.raw = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/raw_data_10x.txt", header = TRUE, row.names = 1)
 
 dims = dim(decidua.raw)
-write.table(colnames(decidua.raw), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
 
 tense.counts = decidua.raw
 decidua.raw[decidua.raw!=0]=1
-tense.counts = tense.counts[which(rowSums(decidua.raw)>=3), which(colSums(decidua.raw)>=500)]
+tense.counts = tense.counts[which(rowSums(decidua.raw)>=60), which(colSums(decidua.raw)>=500)]
 rm(decidua.raw)
+
+subset_of_features <- function(nr){
+  expression_var = apply(tense.counts, 1, var)
+  variably_expressed = names(tail(sort(expression_var), nr))
+  tense.counts = tense.counts[variably_expressed, ]
+}
+
+sample = sample(64735, 10000)
+sample = sort(sample)
+write.table(sample, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/sample", quote = FALSE, row.names = FALSE, col.names = FALSE)
+tense.counts = tense.counts[,sample]
+
+
+write.table(colnames(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
 
 # row and column indices of non-zero values
 non.zero = as.data.frame(which(tense.counts != 0, arr.ind=TRUE))

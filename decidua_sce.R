@@ -10,12 +10,12 @@ source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/seurat_utils.R")
 path = "/icgc/dkfzlsdf/analysis/B210/Evelin/"
 
 norm = args[1]
-#norm = "SCT"
+#norm = "log"
 if (norm == "log") {assay = "RNA"}
 if (norm == "SCT") {assay = "SCT"}
 
 
-load(file = paste0(path, "decidua/",norm,"_seu_5000.RData"))
+load(file = paste0(path, "decidua/",norm,"_seu.RData"))
 
 rowData = data.frame(feature_symbol = row.names(seu[[assay]]))
 colData = data.frame(Barcode = colnames(seu[[assay]]))
@@ -31,4 +31,4 @@ se = SummarizedExperiment(assays = list(counts = assays[[1]], logcounts = assays
 rm(seu)
 
 decidua = as(se, "SingleCellExperiment")
-save(decidua, file = paste0(path, "sce_RData/",norm,"_decidua.RData"))
+save(decidua, file = paste0(path, "sce_RData/", norm,"_sce.RData"))

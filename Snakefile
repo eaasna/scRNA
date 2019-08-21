@@ -1,44 +1,13 @@
-configfile: "config.yaml"
+NORMS = ["log", "SCT"]
+PATH = "/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/"
 
-#Extract variably expressed genes from decidua
-rule extract_variable_genes:
-	input:
-		f1 = "{dataset}raw_data_10x.txt",
-		f2 = "{dataset}E-MTAB-6701_arrayexpress_10x_meta.txt"
-	output:
-		f1 = "{dataset}seurat_object/decidua_5000_variably_expressed_counts.RData"
-	resources:
-		mem = 2000
-	threads: 1
-	shell:
-		"""
-		module load R/3.6.0
-		Rscript --vanilla {wildcards.dataset}git-repo/decidua_pre.R 5000
-		"""
-		
-#Extract variably expressed genes from decidua
-rule extract_variable_genes:
-	input:
-		f1 = "{dataset}seurat_object/decidua_5000_variably_expressed_counts.RData",
-		f3 = "{dataset}decidua_gene_list",
-		f4 = "{dataset}seurat_object/joined.RData"
-	output:
-		f1 = "{dataset}seurat_object/decidua_sce.RData",
-		f2 = "{dataset}seurat_object/menstrual_sce.RData"
-	resources:
-		mem = 2000
-	threads: 1
-	shell:
-		"""
-		module load R/3.6.0
-		Rscript --vanilla {wildcards.dataset}git-repo/constructing_sce.R
-		"""
-		
+
+#Create matrix.mtx, genes.tsv, barcodes.tsv for Seurat input	
 
 #Make sure that all final output files get created
 rule make_all:
 	input:
-		expand("{dataset}seurat_object/{type}_sce.RData", type=config["tissue"], dataset=config["path"])
+		expand("{dataset}sce_RData/{norm}_decidua.RData", dataset=PATH, norm=NORMS)
 	output:
 		"out.txt"
 	resources:
@@ -46,4 +15,30 @@ rule make_all:
 	threads: 1
 	shell:
 		"echo 'Done' > {output}"
-		
+	
+
+#Create Seurat object from decidua data
+rule decidua_normalization:
+	input:
+		"{dataset}decidua/matrix.mtx",
+		"{dataset}decidua/barcodes.tsv",
+		"{dataset}E-MTAB-6701_arrayexpress_10x_meta.txt"
+	output:
+		"{dataset}decidua/{norm}_seu.RData"
+	shell:
+		"""
+		module load R/3.6.0 
+		Rscript {wildcards.dataset}git-repo/decidua_normalization.R {wildcards.norm}
+		"""
+
+#Create SingleCellExperiment object
+rule decidua_sce:
+	input:
+		"{dataset}decidua/{norm}_seu.RData"
+	output: 
+		"{dataset}sce_RData/{norm}_decidua.RData"
+	shell:
+		"""
+		module load R/3.6.0 
+		Rscript {wildcards.dataset}decidua_sce.R {wildcards.norm}
+		"""		
