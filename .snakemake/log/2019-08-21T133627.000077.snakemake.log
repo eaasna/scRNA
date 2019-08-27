@@ -1,0 +1,33 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1
+Rules claiming more threads will be scaled down.
+Unlimited resources: mem
+Job counts:
+	count	jobs
+	2	decidua_normalization
+	2	decidua_sce
+	1	make_all
+	5
+
+[Wed Aug 21 13:36:27 2019]
+rule decidua_normalization:
+    input: /icgc/dkfzlsdf/analysis/B210/Evelin/decidua/matrix.mtx, /icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv, /icgc/dkfzlsdf/analysis/B210/Evelin/decidua/genes.tsv, /icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpress_10x_meta.txt
+    output: /icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_seu.RData
+    jobid: 4
+    wildcards: dataset=/icgc/dkfzlsdf/analysis/B210/Evelin, norm=SCT
+
+[Wed Aug 21 13:39:01 2019]
+Error in rule decidua_normalization:
+    jobid: 4
+    output: /icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_seu.RData
+    shell:
+        
+		module load R/3.6.0 
+		Rscript --vanilla /icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/decidua_normalization.R SCT
+		
+        (exited with non-zero exit code)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/.snakemake/log/2019-08-21T133627.000077.snakemake.log

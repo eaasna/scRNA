@@ -52,4 +52,9 @@ for(i in 1:length(seu_list)){
   
 }
 
+load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu.RData" ))
+seu_list[[8]] = seu
+seu_list[[8]]@meta.data[, "sample"] <- "decidua"
+rm(seu)
+
 save( seu_list, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/seu_list_",norm,".RData" ))

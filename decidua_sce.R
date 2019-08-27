@@ -1,6 +1,11 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 
+
+#norm = args[1]
+norm = "SCT"
+
+
 library(SingleCellExperiment)
 library(SummarizedExperiment)
 library(Seurat)
@@ -9,8 +14,7 @@ source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/seurat_utils.R")
 
 path = "/icgc/dkfzlsdf/analysis/B210/Evelin/"
 
-norm = args[1]
-#norm = "log"
+
 if (norm == "log") {assay = "RNA"}
 if (norm == "SCT") {assay = "SCT"}
 
@@ -31,4 +35,4 @@ se = SummarizedExperiment(assays = list(counts = assays[[1]], logcounts = assays
 rm(seu)
 
 decidua = as(se, "SingleCellExperiment")
-save(decidua, file = paste0(path, "sce_RData/", norm,"_sce.RData"))
+save(decidua, file = paste0(path, "sce_RData/", norm,"_decidua.RData"))

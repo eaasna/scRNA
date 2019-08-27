@@ -29,7 +29,7 @@ suffix = "/outs/filtered_gene_bc_matrices/GRCh38/"
 ```
 
 ```{r}
-norm = "log"
+norm = "SCT"
 if (norm == "log"){assay = "RNA"}
 if (norm == "SCT"){assay = "SCT"}
 ```
@@ -38,8 +38,8 @@ Created an integrated seurat object with 4 assays. Using subset of cells from sa
 ```{r include=FALSE}
 load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/integrated_seu.RData"))
 seu_full = seu
-barcodes07 = colnames(seu[[assay]]@data[,which(seu$sample == "07")])
-seu = subset(seu, cells = barcodes07)
+#barcodes07 = colnames(seu[[assay]]@data[,which(seu$sample == "07")])
+#seu = subset(seu, cells = barcodes07)
 ```
 
 ```{r }
@@ -58,7 +58,7 @@ seu_list = c(seu)
 ```
 
 ```{r include=FALSE}
-load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu_5000.RData"))
+load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu.RData"))
 ```
 
 
@@ -132,15 +132,12 @@ seu_full$conos = conos$celltype
 
 ```{r fig.height=7, fig.width=10}
 DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(!is.na(seu_full$conos)))
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/last/all_types.pdf", width = 10, height = 7)
 ```
 
 ```{r fig.height=7, fig.width=10}
-DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(seu_full$conos %in% c("SCT", "VCT", "EVT", "fFB1", "fFB2"))) + labs(title = "predicted fetal cells")
-```
-
-
-```{r fig.height=7, fig.width=10}
-DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(!(is.na(seu_full$conos) | seu_full$conos %in% c("SCT", "VCT", "EVT", "fFB1", "fFB2")))) + labs(title = "predicted maternal cells")
+DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(seu_full$conos %in% c("Endo (f)","Endo (m)","Endo L"))) + labs(title = "predicted fetal cells")
+#ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/last/fetal_cells.pdf", width = 10, height = 7)
 ```
 
 # Marker gene based cluster labels
@@ -158,6 +155,7 @@ plot_grid(DimPlot(seu_full, reduction = "log.umap", group.by = "celltype", cells
 
 ```{r fig.width=10, fig.height=7}
 DimPlot(seu_full, reduction = "log.umap", group.by = "celltype", cells = which(!is.na(seu_full$celltype)))
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/last/marker_predictions.pdf", width = 10, height = 7)
 ```
 
 # Scmap
@@ -180,12 +178,12 @@ menstrual = as(se, "SingleCellExperiment")
 ```
 
 ```{r}
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/sce_RData/",norm,"_decidua_5000.RData"))
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/sce_RData/",norm,"_decidua.RData"))
 ```
 
 Feature selection
 ```{r}
-decidua <- selectFeatures(decidua, suppress_plot = FALSE, 1000)
+decidua <- selectFeatures(decidua, suppress_plot = FALSE, 500)
 decidua <- indexCluster(decidua, cluster_col = "annotation")
 ```
 

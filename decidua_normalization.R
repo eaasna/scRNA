@@ -1,3 +1,11 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+
+
+norm = "SCT"
+#norm = args[1]
+
+
 library(Seurat)
 library(devtools)
 
@@ -14,8 +22,6 @@ metadata = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpr
 metadata = metadata[which(metadata$Cell %in% colnames(seu[["RNA"]])), ]
 seu$annotation = metadata$annotation
 
-#norm = "SCT"
-norm = args[1]
 
 if (norm == "log"){
   seu <- NormalizeData(seu, normalization.method = "LogNormalize" )

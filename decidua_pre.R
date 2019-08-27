@@ -2,26 +2,20 @@
 # https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6701/files/processed/
 decidua.raw = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/raw_data_10x.txt", header = TRUE, row.names = 1)
 
-dims = dim(decidua.raw)
+metadata = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpress_10x_meta.txt", header = TRUE)
+fetal = which(metadata$annotation %in% c("SCT", "VCT", "EVT", "fFB1", "fFB2", "HB", "EB"))
+
+seq = seq(length(colnames(decidua.raw))) 
+decidua.raw = decidua.raw[,seq[which(!seq %in% fetal)]]
 
 tense.counts = decidua.raw
 decidua.raw[decidua.raw!=0]=1
 tense.counts = tense.counts[which(rowSums(decidua.raw)>=60), which(colSums(decidua.raw)>=500)]
 rm(decidua.raw)
 
-subset_of_features <- function(nr){
-  expression_var = apply(tense.counts, 1, var)
-  variably_expressed = names(tail(sort(expression_var), nr))
-  tense.counts = tense.counts[variably_expressed, ]
-}
+#write.table(colnames(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(row.names(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/temp_genes", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
 
-sample = sample(64735, 10000)
-sample = sort(sample)
-write.table(sample, file = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/sample", quote = FALSE, row.names = FALSE, col.names = FALSE)
-tense.counts = tense.counts[,sample]
-
-
-write.table(colnames(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
 
 # row and column indices of non-zero values
 non.zero = as.data.frame(which(tense.counts != 0, arr.ind=TRUE))
@@ -36,6 +30,7 @@ vector.counts = vector.counts[which(vector.counts!=0)]
 #library(Matrix)
 #sparse.counts <- sparseMatrix(i = non.zero$row, j = non.zero$col, x = vector.counts, dims = dim(tense.counts), dimnames = dimnames(tense.counts))
 
+dims = dim(tense.counts)
 # Seurat matrix
 # cols: gene i.e row nr, barcode i.e col nr, count
 # first non commented row agrees with number of rows in barcode.tsv and genes.tsv
