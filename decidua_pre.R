@@ -3,7 +3,7 @@
 decidua.raw = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/raw_data_10x.txt", header = TRUE, row.names = 1)
 
 metadata = read.table("/icgc/dkfzlsdf/analysis/B210/Evelin/E-MTAB-6701_arrayexpress_10x_meta.txt", header = TRUE)
-fetal = which(metadata$annotation %in% c("SCT", "VCT", "EVT", "fFB1", "fFB2", "HB", "EB"))
+fetal = which(metadata$annotation %in% c("SCT", "VCT", "EVT", "fFB1", "fFB2", "HB", "EB","Endo (f)"))
 
 seq = seq(length(colnames(decidua.raw))) 
 decidua.raw = decidua.raw[,seq[which(!seq %in% fetal)]]

@@ -2,7 +2,7 @@
 args = commandArgs(trailingOnly=TRUE)
 
 
-norm = "SCT"
+norm = "log"
 #norm = args[1]
 
 

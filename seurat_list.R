@@ -36,25 +36,9 @@ for(i in 1:length(seu_list)){
     seu_list[[i]] <- FindVariableFeatures(seu_list[[i]], selection.method = "vst", nfeatures = 2000, assay = "RNA")
     all_genes <- rownames(seu_list[[i]])
     seu_list[[i]] <- ScaleData(seu_list[[i]], features = all_genes, vars.to.regress = "percent.mt")
-
   }
-  
-  nPCA = 30
-  seu_list[[i]] <- RunPCA(seu_list[[i]], features = VariableFeatures(seu_list[[i]]) )
-  #seu_list[[i]] <- RunUMAP(seu_list[[i]], dims = 1:nPCA)
-  
-  if (!(i %in% c(5, 6))){
-    seu_list[[i]] <- RunTSNE(seu_list[[i]])  
-  }
-  
-  seu_list[[i]] <- FindNeighbors(seu_list[[i]])
-  seu_list[[i]] <- FindClusters(seu_list[[i]], verbose = FALSE)
   
 }
 
-load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu.RData" ))
-seu_list[[8]] = seu
-seu_list[[8]]@meta.data[, "sample"] <- "decidua"
-rm(seu)
 
 save( seu_list, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/seu_list_",norm,".RData" ))

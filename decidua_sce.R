@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 
 
 #norm = args[1]
-norm = "SCT"
+norm = "log"
 
 
 library(SingleCellExperiment)

@@ -1,0 +1,28 @@
+System:
+Alt+Space <- open Krunner
+Crt+Alt+T <- open Konsole
+Alt+Tab <- navigate through open processes
+Ctrl+F9 <- Toggle all windows
+Windows+Alt+Arrow Keys <- Switch to higher/lower window
+
+Firefox:
+Alt+A <- select address bar
+Ctrl+W <- close current tab
+Ctrl+T <- open new tab
+Ctrl+Tab <- navigate through tabs 
+
+	open URL
+Ctrl+click <- open in new tab
+Ctrl+Shift+click <- open in new tab and switch to it
+
+
+Terminal:
+Ctrl+Shfift+T <- open new tab
+Ctrl+shift+W <- close current tab
+
+Text:
+Tab 
+Shift+Tab
+Shift+Arrow Keys
+Shift+Ctrl+Arrow Keys
+

@@ -34,7 +34,15 @@ if (norm == "log"){assay = "RNA"}
 if (norm == "SCT"){assay = "SCT"}
 ```
 
-Created an integrated seurat object with 4 assays. Using subset of cells from sample 07
+Created an integrated seurat from 7 menstrual samples. 
+Seurat object has 4 assays 
+RNA - samples naively combined and log normalized
+  input for conos and scmap
+SCT - samples naively combined and SCTransformed
+  input for conos and scmap
+SCT.single - samples SCTransformed and then naively combined
+  input for Seurat integration
+integrated - integrating with integration anchors
 ```{r include=FALSE}
 load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/integrated_seu.RData"))
 seu_full = seu
@@ -135,10 +143,6 @@ DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(!is.
 ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/last/all_types.pdf", width = 10, height = 7)
 ```
 
-```{r fig.height=7, fig.width=10}
-DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(seu_full$conos %in% c("Endo (f)","Endo (m)","Endo L"))) + labs(title = "predicted fetal cells")
-#ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/last/fetal_cells.pdf", width = 10, height = 7)
-```
 
 # Marker gene based cluster labels
 ```{r fig.height=5, fig.width=15}
@@ -220,3 +224,42 @@ ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() +
   labs(title = "projected celltypes")
 #ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",assay,"_celltypes_all_genes.pdf"))
 ```
+
+
+
+```{r fig.width=10, fig.height=7}
+seu_full$scmap = scmapCluster_results$combined_labs
+DimPlot(seu_full, reduction = "log.umap", group.by = "scmap", cells = which(seu_full$scmap != "unassigned"))
+#DimPlot(seu_full, reduction = "log.umap", group.by = "scmap", cells = which(!is.na(seu_full$scmap)))
+#DimPlot(seu_full, reduction = "log.umap", group.by = "scmap")
+
+ggsave("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/last/scmap_predictions.pdf", width = 10, height = 7)
+```
+
+```{r}
+plot_grid(DimPlot(seu_full, reduction = "log.umap", group.by = "celltype", cells = which(!is.na(seu_full$celltype))), DimPlot(seu_full, reduction = "log.umap", group.by = "conos", cells = which(!is.na(seu_full$celltype))), DimPlot(seu_full, reduction = "integrated.umap", group.by = "celltype", cells = which(!is.na(seu_full$celltype))), ncol = 3)
+```
+
+```{r}
+load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/seu_list_",norm,".RData" ))
+load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu.RData" ))
+seu_list[[8]] = seu
+seu_list[[8]]@meta.data[, "sample"] <- "decidua"
+rm(seu)
+
+seu_features <- SelectIntegrationFeatures(object.list = seu_list, nfeatures = 3000)
+seu_list <- PrepSCTIntegration(object.list = seu_list, anchor.features = seu_features, verbose = FALSE)
+
+# considering 50 nearest neighbors when filtering anchors <- close to upper limit for smallest sample
+anchors <- FindIntegrationAnchors(object.list = seu_list, normalization.method = "SCT", 
+                                  anchor.features = seu_features, verbose = FALSE, k.filter = 50)
+seu <- IntegrateData(anchorset = anchors, normalization.method = "SCT", verbose = FALSE, preserve.order = TRUE )
+```
+
+```{r}
+seu <- RunPCA(seu, verbose = FALSE)
+seu <- RunUMAP(seu, dims = 1:30)
+```
+
+
+
