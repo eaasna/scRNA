@@ -43,3 +43,4 @@ for(i in 1:length(seu_list)){
 
 
 save( seu_list, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/menstrual_RData/seu_list_",norm,".RData" ))
+# followed by seurat_integrated.R to create a seurat object from all menstrual samples

@@ -24,46 +24,45 @@ library(SummarizedExperiment)
 library(scmap)
 library(pheatmap)
 source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/seurat_utils.R")
-dir_path = "/icgc/dkfzlsdf/analysis/B210/data/mf/"
-suffix = "/outs/filtered_gene_bc_matrices/GRCh38/"
+```
+
+For both menstrual and decidual reference data:
+* filtered out cells expressing <500 genes
+* filtered out genes expressed in <0.1% of cells
+* filtered out cells expressing >20% mitochondrial genes
+* SCTransform
+
+Reading naively combined, QCd, SCTransformed Seurat object of all menstrual samples.
+```{r}
+load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/menstrual_RData/SCT_seu.RData"))
+ seu.list = list(seu)
+seu.list[[1]]$origin <- "menstrual"
+```
+
+Reading QCd, SCTransformed Seurat object of decidua data. Contains no fetal cells.
+Created using decidua_pre.R -> decidua_normalization.R
+```{r}
+load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_seu.RData" ))
+seu$origin <- "decidua"
+seu.list[[length(seu.list)+1]] = seu 
+rm(seu)
 ```
 
 ```{r}
-norm = "SCT"
-if (norm == "log"){assay = "RNA"}
-if (norm == "SCT"){assay = "SCT"}
+names(seu.list) = c("menstrual", "decidua")
 ```
+
 
 # Using seurat anchors to integrate decidua and menstrual data
-seu.list initially contains all 7 samples from menstrual data, all have been separately normalized
+
+Integrating decidua and menstrual data.
 ```{r}
-norm = "SCT"
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/menstrual_RData/integrated_seu.RData"))
-DefaultAssay(seu) <- "SCT"
-seu.list = list(seu)
-
-#removing unnecessary assays and reductions to save memory when integrating
-seu.list[[1]]@reductions$SCT.umap <- NULL
-seu.list[[1]]@reductions$log.pca <- NULL
-seu.list[[1]]@reductions$log.umap <- NULL
-seu.list[[1]]@reductions$pca <- NULL
-seu.list[[1]]@reductions$tsne <- NULL
-seu.list[[1]]@assays$integrated <- NULL
-seu.list[[1]]@assays$SCT.single <- NULL
-
-seu.list[[1]]$origin <- "menstrual"
-load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu.RData" ))
-seu.list[[2]] = seu
-seu.list[[2]]$origin <- "decidua"
-rm(seu)
-
 options(future.globals.maxSize=7229000000)
 seu_features <- SelectIntegrationFeatures(object.list = seu.list, nfeatures = 3000)
 seu.list <- PrepSCTIntegration(object.list = seu.list, anchor.features = seu_features, verbose = FALSE)
 
-# considering 50 nearest neighbors when filtering anchors <- close to upper limit for smallest sample
 anchors <- FindIntegrationAnchors(object.list = seu.list, normalization.method = "SCT", 
-                                  anchor.features = seu_features, verbose = TRUE, k.filter = 50)
+                                  anchor.features = seu_features, verbose = TRUE)
 seu.integrated <- IntegrateData(anchorset = anchors, normalization.method = "SCT", verbose = FALSE, preserve.order = TRUE )
 ```
 
@@ -83,6 +82,7 @@ All menstrual cells are NA since they have not been labelled yet.
 DimPlot(seu.integrated, group.by = "annotation", cells = which(!seu.integrated$annotation %in% c("Endo (f)"))) 
 ```
 
+Difficult to make out colors since there are many cell types.
 
 ```{r fig.width=10, fig.height=7}
 seu.integrated$annotation.simple = seu.integrated$annotation
@@ -93,50 +93,121 @@ seu.integrated$annotation.simple[which(seu.integrated$annotation.simple %in% c("
 seu.integrated$annotation.simple[which(seu.integrated$annotation.simple %in% c("dP1", "dP2"))] = "dP"
 seu.integrated$annotation.simple[which(seu.integrated$annotation.simple %in% c("dS1", "dS2", "dS3"))] = "dS"
 seu.integrated$annotation.simple[which(seu.integrated$annotation.simple %in% c("Endo L", "Endo (m)"))] = "Endo"
-DimPlot(seu.integrated, group.by = "annotation.simple", cells = which(!seu.integrated$annotation %in% c("Endo (f)"))) + 
+DimPlot(seu.integrated, group.by = "annotation.simple", cells = which(!seu.integrated$annotation %in% c("Endo (f)"))) +
+  labs(title = "Simplified labels") +
+      theme(plot.title = element_text(size = 15))
+```
+
+Menstrual cells seem to cluster mainly around epithelial, endothelial, smooth muscle cells and pericytes. 
+
+```{r}
+rm(seu.integrated)
+```
+
+# Marker gene based cluster labels
+```{r}
+source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/marker_library.R")
+print(marker.list[1:5]) # most markers from Angela's list, I added some from papers
+```
+
+Seurat object for gathering all annotations
+```{r include=FALSE}
+seu.annotated = seu.list[["menstrual"]]
+```
+
+
+```{r}
+find_celltype_markers <- function(ident1, ident2){
+  print(paste("Cluster", ident1, ident2))
+  markers = row.names(FindMarkers(seu, ident.1 = ident1, ident.2 = ident2, min.pct=0.25, only.pos = TRUE)[1:40,])
+  print(unlist(marker.list)[which(unlist(marker.list) %in% markers[which(markers %in% unlist(marker.list))])])
+}
+```
+
+```{r}
+DimPlot(seu.annotated)
+```
+
+
+Which cell type markers are among first 40 marker genes for each cluster. Initially comparing each cluster to all others and only looking at positive markers.
+```{r}
+for (i in 1:14){
+  find_celltype_markers(i, NULL)
+}
+```
+
+Labelling some clusters stromal or endothelial based on this approach. Not conclusive for the majority of clusters
+```{r fig.height=5, fig.width=15}
+seu.annotated$marker = 0
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(1, 4, 5, 6, 8)) ]="stromal"
+seu.annotated$marker[which(seu.annotated$seurat_clusters == 13) ]="endothelial"
+```
+
+TODO: Checking stromal and endothelial marker genes expression using VlPlot and FeaturePlot 
+```{r fig.height=5, fig.width=15}
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(11)) ]="smooth muscle"
+```
+
+
+
+
+These cluster labels were found by manually comparing list of known marker genes and gene expression in clusters (normalization_methods_comparison.Rmd)
+```{r fig.height=5, fig.width=15}
+seu.annotated$marker = 0
+seu.annotated$marker[which(seu.annotated$seurat_clusters == 14 | seu.annotated$log.clusters == 15) ]="endothelial"
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(1, 5)) ]="stromal"
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(11)) ]="smooth muscle"
+seu.annotated$marker[which(seu.annotated$marker==0) ]=NA
+```
+
+
+```{r fig.width=10, fig.height=7}
+DimPlot(seu.annotated, reduction = "umap", group.by = "marker", cells = which(!is.na(seu.annotated$marker)))
+```
+
+Turn this loop into a function somehow?
+```{r}
+df = data.frame(col = c(1, 2, 3, 2, 3, 3, 3), h = c(5, 5, 5, 10, 10, 10, 15), w = c(5, 10, 15, 10, 15, 15, 15))
+
+all_markers = unlist(goi, use.names = F)
+variable_genes = VariableFeatures(seu)
+variable_markers = all_markers[which(all_markers %in% variable_genes)]
+celltypes = names(goi)
+
+if (FALSE){
+#for (celltype in names(marker.list)){
+  #markers_to_plot = goi[[celltype]][which(marker.list[[celltype]] %in% variable_markers)]
+  markers_to_plot = marker.list[[celltype]][which(marker.list[[celltype]] %in% row.names(seu[[assay]]@data))]
+  # number of marker genes that have UMI counts in this assay
+  len = length(markers_to_plot)
+  if (len>0 & len<8){
+    col = df[len,"col"]
+    h = df[len,"h"]
+    w = df[len,"w"]
+    
+    if (len==1) {title = markers_to_plot[1]} else {title = celltype}
+    VlnPlot(seu, features = markers_to_plot, ncol = col, pt.size = 0.1) + 
+      labs(title = title) +
+      theme(plot.title = element_text(size = 15))
+    ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"/vln_",celltype,"_",type,".pdf"), height = h, width = w)
+    
+    FeaturePlot(seu, features = markers_to_plot, reduction = "log.umap", ncol = col, pt.size = 0.2) + 
+      labs(title = title) +
+      theme(plot.title = element_text(size = 15))
+    ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"/umap_",celltype,"_",type,".pdf"), height = h, width = w)
+  }
+}
+
 ```
 
 
 # Labelling cells with Conos
 
-Created an integrated seurat from 7 menstrual samples. 
-Seurat object has 4 assays 
-RNA - samples naively combined and log normalized
-  input for conos and scmap
-SCT - samples naively combined and SCTransformed
-  input for conos and scmap
-SCT.single - samples SCTransformed and then naively combined
-  input for Seurat integration
-integrated - integrating with integration anchors
-
-Seurat object created in seurat_integrated.R
-```{r include=FALSE}
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/menstrual_RData/integrated_seu.RData"))
-print(seu[["pca"]], dims = 1:5, nfeatures = 5)
-```
-
-```{r include=FALSE}
-conos_list = c(seu)
-```
-
-Filtered, SCTransformed Seurat object of first trimester decidual data. Contains no fetal cells.
-Created using decidua_pre.R -> decidua_normalization.R
-```{r include=FALSE}
-load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_seu.RData"))
-print(seu[["pca"]], dims = 1:5, nfeatures = 5)
-```
-
-
-```{r include=FALSE}
-conos_list[[length(conos_list)+1]] = seu
-rm(seu)
-names(conos_list) = c("menstrual", "decidua")
-```
-
-
 ```{r message = FALSE, warning=FALSE}
 # how many cores on HPC?
-con <- Conos$new(conos_list, n.cores=4)
+con <- Conos$new(seu.list, n.cores=4)
 ```
 
 ```{r}
@@ -147,14 +218,10 @@ con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000,
 con$findCommunities(method=leiden.community, resolution=1)
 ```
 
-Clusters correspond between datasets
-```{r}
-con$plotPanel(font.size=4)
-```
 
 Propagating labels from reference
 ```{r}
-cellannot <- conos_list[["decidua"]]$annotation
+cellannot <- seu.list[["decidua"]]$annotation
 
 new.label.probabilities <- con$propagateLabels(labels = cellannot, verbose=T, fixed.initial.labels=T)
 new.label.probabilities <- new.label.probabilities[complete.cases(new.label.probabilities),]
@@ -171,22 +238,21 @@ con$plotGraph(colors=uncertainty, show.legend=T, legend.title="Uncertainty", leg
 new.annot <- setNames(colnames(new.label.probabilities)[apply(new.label.probabilities,1,which.max)], rownames(new.label.probabilities))
 ```
 
+```{r}
+con$plotPanel()
+```
+
+
 Clusters labelled based on reference
 ```{r}
-#pdf(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",norm,"_conos_labelled_clusters.pdf"))
 con$plotPanel(groups = new.annot)
-#dev.off()
 ```
 
-
-```{r include=FALSE}
-seu.annotated = conos_list[["menstrual"]]
-```
 
 Setting all predicted labels where uncertainty >0.3 to NA. 
 ```{r}
 new.annot[which(uncertainty>0.3)] = NA
-conos = data.frame(barcode = colnames(seu.annotated[[assay]])) %>% 
+conos = data.frame(barcode = colnames(seu.annotated[["SCT"]])) %>% 
   left_join(data.frame(barcode = names(new.annot), celltype = unname(new.annot)), by = "barcode")
 
 seu.annotated$conos = conos$celltype
@@ -194,56 +260,42 @@ seu.annotated$conos = conos$celltype
 
 Projecting conos predictions onto initial UMAP from Seurat
 ```{r fig.height=7, fig.width=10}
-DimPlot(seu.annotated, reduction = "log.umap", group.by = "conos", cells = which(!is.na(seu.annotated$conos)))
+DimPlot(seu.annotated, reduction = "umap", group.by = "conos", cells = which(!is.na(seu.annotated$conos)))
 ```
 
 These variable are not necessary. Gathering all annotations into variable seu.annotated
 ```{r}
-rm(con, conos, conos_list, new.label.probabilities)
+rm(con, conos, seu.list, new.label.probabilities)
 ```  
 
-# Marker gene based cluster labels
-
-These cluster labels were found by manually comparing list of known marker genes and gene expression in clusters (normalization_methods_comparison.Rmd)
-```{r fig.height=5, fig.width=15}
-seu.annotated$marker = 0
-seu.annotated$marker[which(seu.annotated$SCT.clusters == 14 | seu.annotated$log.clusters == 15) ]="endothelial"
-seu.annotated$marker[which(seu.annotated$SCT.clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
-seu.annotated$marker[which(seu.annotated$SCT.clusters %in% c(1, 5)) ]="stromal"
-seu.annotated$marker[which(seu.annotated$SCT.clusters %in% c(11)) ]="smooth muscle"
-seu.annotated$marker[which(seu.annotated$marker==0) ]=NA
-```
 
 
-```{r fig.width=10, fig.height=7}
-DimPlot(seu.annotated, reduction = "log.umap", group.by = "marker", cells = which(!is.na(seu.annotated$marker)))
-```
 
 # Labelling cells with scmap
-Scmap uses SingleCellExperiment objects as input
+Scmap uses SingleCellExperiment objects as input. Constructing sce object from menstrual data Seurat object.
 ```{r}
-rowData = data.frame(feature_symbol = row.names(seu.annotated[[assay]]))
-colData = data.frame(Barcode = colnames(seu.annotated[[assay]]))
+rowData = data.frame(feature_symbol = row.names(seu.annotated[["SCT"]]))
+colData = data.frame(Barcode = colnames(seu.annotated[["SCT"]]))
 cluster_info = data.frame(cluster = Idents(seu.annotated))
 cluster_info$Barcode = row.names(cluster_info)
 colData = left_join(colData, cluster_info, by = "Barcode")
 
 
-assays = return_assay(seu.annotated, assay)
+assays = return_assay(seu.annotated, "SCT")
 se = SummarizedExperiment(assays = list(counts = assays[[1]], logcounts = assays[[2]]), rowData = rowData, colData = colData)
 rm(assays, cluster_info, rowData)
 
 menstrual = as(se, "SingleCellExperiment")
 ```
 
-SingleCellExperiment object created in decidua_sce.R
+SingleCellExperiment object created in decidua_sce.R. Also went through all filtering, QC steps.
 ```{r}
-load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/",norm,"_sce.RData"))
+load(file = "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_sce.RData")
 ```
 
 Feature selection
 ```{r}
-decidua <- selectFeatures(decidua, suppress_plot = FALSE, 1000)
+decidua <- selectFeatures(decidua, suppress_plot = TRUE, 1000)
 decidua <- indexCluster(decidua, cluster_col = "annotation")
 ```
 
@@ -284,19 +336,14 @@ ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() +
 ```{r fig.width=10, fig.height=7}
 seu.annotated$scmap = scmapCluster_results$combined_labs
 seu.annotated$scmap[which(seu.annotated$scmap=="unassigned")]=NA
-DimPlot(seu.annotated, reduction = "log.umap", group.by = "scmap", cells = which(!is.na(seu.annotated$marker)))
+DimPlot(seu.annotated, reduction = "umap", group.by = "scmap", cells = which(!is.na(seu.annotated$marker)))
 ```
 
 ```{r fig.width=10, fig.height=21}
-plot_grid(DimPlot(seu.annotated, reduction = "log.umap", group.by = "conos") + 
-            labs(title = "Conos") + theme(plot.title = element_text(size = 15)), 
-          DimPlot(seu.annotated, reduction = "log.umap", group.by = "marker") + 
+plot_grid(DimPlot(seu.annotated, reduction = "umap", group.by = "marker") + 
             labs(title = "Known markers") + theme(plot.title = element_text(size = 15)),
-          DimPlot(seu.annotated, reduction = "log.umap", group.by = "scmap") + 
+          DimPlot(seu.annotated, reduction = "umap", group.by = "conos") + 
+            labs(title = "Conos") + theme(plot.title = element_text(size = 15)), 
+          DimPlot(seu.annotated, reduction = "umap", group.by = "scmap") + 
             labs(title = "Scmap") + theme(plot.title = element_text(size = 15)) , ncol = 1)
-```
-
-
-```{r}
-rm(c(decidua, menstrual))
 ```
