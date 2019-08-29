@@ -33,7 +33,7 @@ if (norm == "log"){
 if (norm == "SCT"){
   # size limit: 2048 * 1024^2 
   options(future.globals.maxSize=891289600)
-  seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE )
+  seu <- SCTransform(seu, verbose = FALSE, conserve.memory = TRUE, new.assay.name = "SCT")
   nPCA = 30
 }
 

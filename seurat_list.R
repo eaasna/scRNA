@@ -18,7 +18,8 @@ twenty2 = Read10X( paste0( dir_path, c("cellranger201_count_24192-25608_4839STDY
 seu_list = c(seven1, seven2, seven3, ten, eighteen, twenty1, twenty2)
 annot_list = c("07", "07", "07", "10", "18", "20", "20")
 
-norm = args[1]
+norm = "SCT"
+#norm = args[1]
 
 for(i in 1:length(seu_list)){
   
@@ -29,7 +30,7 @@ for(i in 1:length(seu_list)){
   
   if (norm == "SCT"){
     options(future.globals.maxSize=891289600)
-    seu_list[[i]] <- SCTransform(seu_list[[i]], verbose = FALSE, conserve.memory = FALSE, vars.to.regress = "percent.mt", new.assay.name = "SCT.single")
+    seu_list[[i]] <- SCTransform(seu_list[[i]], verbose = FALSE, conserve.memory = FALSE, vars.to.regress = "percent.mt", new.assay.name = "SCT")
 
   } else {
     seu_list[[i]] <- NormalizeData(seu_list[[i]], normalization.method = "LogNormalize")
@@ -41,4 +42,4 @@ for(i in 1:length(seu_list)){
 }
 
 
-save( seu_list, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/seurat_object/seu_list_",norm,".RData" ))
+save( seu_list, file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/menstrual_RData/seu_list_",norm,".RData" ))
