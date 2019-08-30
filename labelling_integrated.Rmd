@@ -26,21 +26,29 @@ library(pheatmap)
 source("/icgc/dkfzlsdf/analysis/B210/Evelin/git-repo/seurat_utils.R")
 ```
 
-For both menstrual and decidual reference data:
+This notebook starts from saved Seurat objects for both menstrual and decidual data. Standard Seurat QC, filtering, normalization is not included here but scripts can be seen https://github.com/eaasna/scRNA
+
+Pre analysis steps for both menstrual and decidual reference data:
 * filtered out cells expressing <500 genes
 * filtered out genes expressed in <0.1% of cells
 * filtered out cells expressing >20% mitochondrial genes
-* SCTransform
+* SCTransformed
 
 Reading naively combined, QCd, SCTransformed Seurat object of all menstrual samples.
 ```{r}
 load(file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/menstrual_RData/SCT_seu.RData"))
- seu.list = list(seu)
+seu.list = list(seu)
 seu.list[[1]]$origin <- "menstrual"
 ```
 
-Reading QCd, SCTransformed Seurat object of decidua data. Contains no fetal cells.
-Created using decidua_pre.R -> decidua_normalization.R
+```{r fig.height=5, fig.width=6}
+DimPlot(seu.list[[1]]) + labs(title = "Seurat clusters for menstrual data")
+```
+
+
+  
+First trimester decidua data from: https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6701/files/processed/. Fetal cells filtered out.
+Reading QCd, SCTransformed Seurat object of decidua data.
 ```{r}
 load( file = paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/SCT_seu.RData" ))
 seu$origin <- "decidua"
@@ -49,13 +57,15 @@ rm(seu)
 ```
 
 ```{r}
+DimPlot(seu.list[[2]], group.by = "annotation") + labs(title = "Cell types in decidual data")
+```
+
+```{r}
 names(seu.list) = c("menstrual", "decidua")
 ```
 
 
 # Using seurat anchors to integrate decidua and menstrual data
-
-Integrating decidua and menstrual data.
 ```{r}
 options(future.globals.maxSize=7229000000)
 seu_features <- SelectIntegrationFeatures(object.list = seu.list, nfeatures = 3000)
@@ -77,12 +87,10 @@ seu.integrated <- RunUMAP(seu.integrated, dims = 1:30)
 * dP <- pericytes
 * dS <- smooth muscle cells
 
-All menstrual cells are NA since they have not been labelled yet.
 ```{r fig.width=10, fig.height=7}
 DimPlot(seu.integrated, group.by = "annotation", cells = which(!seu.integrated$annotation %in% c("Endo (f)"))) 
 ```
-
-Difficult to make out colors since there are many cell types.
+All menstrual cells are NA since they have not been labelled yet. Difficult to make out colors since there are many cell types.
 
 ```{r fig.width=10, fig.height=7}
 seu.integrated$annotation.simple = seu.integrated$annotation
@@ -119,15 +127,10 @@ seu.annotated = seu.list[["menstrual"]]
 ```{r}
 find_celltype_markers <- function(ident1, ident2){
   print(paste("Cluster", ident1, ident2))
-  markers = row.names(FindMarkers(seu, ident.1 = ident1, ident.2 = ident2, min.pct=0.25, only.pos = TRUE)[1:40,])
+  markers = row.names(FindMarkers(seu.annotated, ident.1 = ident1, ident.2 = ident2, min.pct=0.25, only.pos = TRUE)[1:40,])
   print(unlist(marker.list)[which(unlist(marker.list) %in% markers[which(markers %in% unlist(marker.list))])])
 }
 ```
-
-```{r}
-DimPlot(seu.annotated)
-```
-
 
 Which cell type markers are among first 40 marker genes for each cluster. Initially comparing each cluster to all others and only looking at positive markers.
 ```{r}
@@ -136,72 +139,147 @@ for (i in 1:14){
 }
 ```
 
-Labelling some clusters stromal or endothelial based on this approach. Not conclusive for the majority of clusters
+Labelling some clusters stromal or endothelial based on this approach. Not conclusive results for the majority of clusters.
 ```{r fig.height=5, fig.width=15}
-seu.annotated$marker = 0
-seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(1, 4, 5, 6, 8)) ]="stromal"
-seu.annotated$marker[which(seu.annotated$seurat_clusters == 13) ]="endothelial"
+stro.clusters = c(1, 4, 5, 6, 8, 10)
+endo.clusters = c(13)
 ```
 
-TODO: Checking stromal and endothelial marker genes expression using VlPlot and FeaturePlot 
-```{r fig.height=5, fig.width=15}
-seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
-seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(11)) ]="smooth muscle"
+## Endothelial markers
+Looking at expression levels of endothelial marker genes.
+```{r fig.width=15, fig.height=3}
+celltype = "all_endothelial"
+endo.marker.list = marker.list[[celltype]][which(marker.list[[celltype]] %in% row.names(seu.annotated[["SCT"]]@data))]
+VlnPlot(seu.annotated, features = endo.marker.list, ncol = 5, pt.size = 0.1) + 
+      labs(title = "Endothelial marker genes") +
+      theme(plot.title = element_text(size = 15))
+```
+Cluster 13 is definitely endothelial cells but it is a very small cluster. 
+
+## Stromal markers
+```{r}
+stro.marker.list = unique(c(marker.list$stromal, marker.list$up_stroma_vs_gland, marker.list$krjutskov_endometrial_stromal, marker.list$stromal_odd, marker.list$stro_ref))
+stro.marker.list = stro.marker.list[which(stro.marker.list %in% row.names(seu.annotated[["SCT"]]@data))]
+stro.marker.list
+```
+
+There are many stromal cell marker genes but many of them might not be variably expressed between clusters.
+```{r}
+stro.marker.list = stro.marker.list[which(stro.marker.list %in% VariableFeatures(seu.annotated)[1:1000])]
+stro.marker.list
+```
+
+```{r fig.width=12, fig.height=9}
+VlnPlot(seu.annotated, features = stro.marker.list, ncol = 4, pt.size = 0.1) + 
+      labs(title = "Stromal marker genes") +
+      theme(plot.title = element_text(size = 15))
+```
+
+```{r fig.width=12, fig.height=9}
+FeaturePlot(seu.annotated, features = stro.marker.list, reduction = "umap", ncol = 4, pt.size = 0.1) + 
+      labs(title = "Stromal marker genes") +
+      theme(plot.title = element_text(size = 15))
+```
+
+Clusters 1, 4, 5, 8, 10 seem to more highly express stromal marker genes.
+
+## Epithelial markers
+```{r}
+epi.marker.list = unique(c(marker.list$epi_ref, marker.list$epithelial, marker.list$endometrial_epithelium, marker.list$krjutskov_endometrial_epithelial))
+epi.marker.list = epi.marker.list[which(epi.marker.list %in% row.names(seu.annotated[["SCT"]]@data))]
 ```
 
 
+```{r fig.width=12, fig.height=6}
+VlnPlot(seu.annotated, features = epi.marker.list, ncol = 4, pt.size = 0.1) + 
+      labs(title = "Epithelial marker genes") +
+      theme(plot.title = element_text(size = 15))
+```
 
 
-These cluster labels were found by manually comparing list of known marker genes and gene expression in clusters (normalization_methods_comparison.Rmd)
-```{r fig.height=5, fig.width=15}
+```{r fig.width=12, fig.height=6}
+FeaturePlot(seu.annotated, features = epi.marker.list, reduction = "umap", ncol = 4, pt.size = 0.1) + 
+      labs(title = "Epithelial marker genes") +
+      theme(plot.title = element_text(size = 15))
+```
+
+Labelling clusters that highly express epithelial markers.
+```{r}
+epi.clusters = c(0, 2, 3, 7, 14)
+```
+
+```{r }
 seu.annotated$marker = 0
-seu.annotated$marker[which(seu.annotated$seurat_clusters == 14 | seu.annotated$log.clusters == 15) ]="endothelial"
-seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(0, 2, 3, 6, 9, 12)) ]="epithelial"
-seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(1, 5)) ]="stromal"
-seu.annotated$marker[which(seu.annotated$seurat_clusters %in% c(11)) ]="smooth muscle"
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% stro.clusters) ]="stromal"
+seu.annotated$marker[which(seu.annotated$seurat_clusters == endo.clusters) ]="endothelial"
+seu.annotated$marker[which(seu.annotated$seurat_clusters %in% epi.clusters) ]="epithelial"
 seu.annotated$marker[which(seu.annotated$marker==0) ]=NA
 ```
 
+```{r fig.width=10, fig.height=7}
+DimPlot(seu.annotated, reduction = "umap", group.by = "marker")
+```
+
+Which clusters are not yet labelled?
+```{r}
+setdiff(seq(14), c(epi.clusters, stro.clusters, endo.clusters))
+```
 
 ```{r fig.width=10, fig.height=7}
-DimPlot(seu.annotated, reduction = "umap", group.by = "marker", cells = which(!is.na(seu.annotated$marker)))
+DimPlot(seu.list[[1]]) + labs(title = "Seurat clusters of menstrual data")
 ```
 
-Turn this loop into a function somehow?
+
+## Cluster 11
+
+Which genes are differentially expressed in cluster a compared to cluster b. And which of those 40 most variable genes are among cell type markers. 
+
+What separates cluster 11 from nearby stromal cluster 1.
 ```{r}
-df = data.frame(col = c(1, 2, 3, 2, 3, 3, 3), h = c(5, 5, 5, 10, 10, 10, 15), w = c(5, 10, 15, 10, 15, 15, 15))
-
-all_markers = unlist(goi, use.names = F)
-variable_genes = VariableFeatures(seu)
-variable_markers = all_markers[which(all_markers %in% variable_genes)]
-celltypes = names(goi)
-
-if (FALSE){
-#for (celltype in names(marker.list)){
-  #markers_to_plot = goi[[celltype]][which(marker.list[[celltype]] %in% variable_markers)]
-  markers_to_plot = marker.list[[celltype]][which(marker.list[[celltype]] %in% row.names(seu[[assay]]@data))]
-  # number of marker genes that have UMI counts in this assay
-  len = length(markers_to_plot)
-  if (len>0 & len<8){
-    col = df[len,"col"]
-    h = df[len,"h"]
-    w = df[len,"w"]
-    
-    if (len==1) {title = markers_to_plot[1]} else {title = celltype}
-    VlnPlot(seu, features = markers_to_plot, ncol = col, pt.size = 0.1) + 
-      labs(title = title) +
-      theme(plot.title = element_text(size = 15))
-    ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"/vln_",celltype,"_",type,".pdf"), height = h, width = w)
-    
-    FeaturePlot(seu, features = markers_to_plot, reduction = "log.umap", ncol = col, pt.size = 0.2) + 
-      labs(title = title) +
-      theme(plot.title = element_text(size = 15))
-    ggsave(paste0("/icgc/dkfzlsdf/analysis/B210/Evelin/plots/",type,"/umap_",celltype,"_",type,".pdf"), height = h, width = w)
-  }
-}
-
+find_celltype_markers(11, 1)
 ```
 
+```{r}
+find_celltype_markers(11, 6)
+```
+
+```{r}
+find_celltype_markers(11, 13)
+```
+
+
+## Cluster 9
+```{r}
+find_celltype_markers(9, 12)
+```
+
+
+```{r}
+find_celltype_markers(9, 14)
+```
+
+```{r}
+find_celltype_markers(9, 8)
+```
+
+```{r}
+find_celltype_markers(9, 7)
+```
+
+### Cluster 12
+```{r}
+find_celltype_markers(12, 9)
+```
+
+```{r}
+find_celltype_markers(12, 7)
+```
+
+```{r}
+find_celltype_markers(12,14)
+```
+
+Clusters 9, 11, 12 still inconclusive. Next trying to label cell types based on reference from decidua.
 
 # Labelling cells with Conos
 
@@ -260,15 +338,13 @@ seu.annotated$conos = conos$celltype
 
 Projecting conos predictions onto initial UMAP from Seurat
 ```{r fig.height=7, fig.width=10}
-DimPlot(seu.annotated, reduction = "umap", group.by = "conos", cells = which(!is.na(seu.annotated$conos)))
+DimPlot(seu.annotated, reduction = "umap", group.by = "conos")
 ```
 
 These variable are not necessary. Gathering all annotations into variable seu.annotated
 ```{r}
 rm(con, conos, seu.list, new.label.probabilities)
 ```  
-
-
 
 
 # Labelling cells with scmap
@@ -336,7 +412,7 @@ ggplot(df, aes(x = reorder(Var1, -Freq), y = Freq)) + geom_col() +
 ```{r fig.width=10, fig.height=7}
 seu.annotated$scmap = scmapCluster_results$combined_labs
 seu.annotated$scmap[which(seu.annotated$scmap=="unassigned")]=NA
-DimPlot(seu.annotated, reduction = "umap", group.by = "scmap", cells = which(!is.na(seu.annotated$marker)))
+DimPlot(seu.annotated, reduction = "umap", group.by = "scmap")
 ```
 
 ```{r fig.width=10, fig.height=21}

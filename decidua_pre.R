@@ -13,9 +13,7 @@ decidua.raw[decidua.raw!=0]=1
 tense.counts = tense.counts[which(rowSums(decidua.raw)>=60), which(colSums(decidua.raw)>=500)]
 rm(decidua.raw)
 
-#write.table(colnames(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
-write.table(row.names(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/temp_genes", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
-
+write.table(colnames(tense.counts), "/icgc/dkfzlsdf/analysis/B210/Evelin/decidua/barcodes.tsv", sep="\n", row.names = FALSE, quote = FALSE, col.names = FALSE)
 
 # row and column indices of non-zero values
 non.zero = as.data.frame(which(tense.counts != 0, arr.ind=TRUE))
